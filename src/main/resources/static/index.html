@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin — Emergency Dashboard</title>
+  <link rel="icon" href="data:,">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+
+  <style>
+    body { background: #f4f6f9; }
+    #map { height: 480px; border-radius: 12px; border: 1px solid #dee2e6; }
+    .emergency-card { cursor: pointer; transition: 0.2s; }
+    .emergency-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.12); }
+    #ws-status { font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+<div class="container mt-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>🚨 Admin Dashboard</h1>
+    <span id="ws-status" class="badge bg-secondary">⚡ Connecting...</span>
+  </div>
+
+  <!-- FORM -->
+  <div class="card p-3 mb-4">
+    <div class="row g-2">
+      <div class="col-md-2"><input id="type" class="form-control" placeholder="Type"/></div>
+      <div class="col-md-3"><input id="location" class="form-control" placeholder="Location"/></div>
+      <div class="col-md-2"><input id="status" class="form-control" placeholder="Status"/></div>
+      <div class="col-md-2"><input id="lat" class="form-control" placeholder="Lat" type="number" step="any"/></div>
+      <div class="col-md-2"><input id="lng" class="form-control" placeholder="Lng" type="number" step="any"/></div>
+      <div class="col-md-1 d-grid">
+        <button class="btn btn-primary" onclick="addEmergency()">Add</button>
+      </div>
+    </div>
+    <small class="text-muted mt-1">💡 Click the map to auto-fill Lat/Lng</small>
+  </div>
+
+  <!-- MAP -->
+  <div class="card p-3 mb-4"><div id="map"></div></div>
+
+  <!-- LIST -->
+  <div id="list" class="row g-2 mb-4"></div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+<script>
+  const map = L.map('map').setView([23.2599, 77.4126], 12);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors', maxZoom: 19
+  }).addTo(map);
+
+  map.on('click', e => {
+    document.getElementById('lat').value = e.latlng.lat.toFixed(6);
+    document.getElementById('lng').value = e.latlng.lng.toFixed(6);
+  });
+
+  let clusterGroup = L.markerClusterGroup();
+  map.addLayer(clusterGroup);
+
+  // 🔥 WEBSOCKET
+  const socket = new SockJS('/ws');
+  const stompClient = Stomp.over(socket);
+  stompClient.debug = null;
+
+  stompClient.connect({}, () => {
+    document.getElementById('ws-status').textContent = '🟢 Live';
+    document.getElementById('ws-status').className = 'badge bg-success';
+
+    // 🔥 REAL-TIME UPDATE
+    stompClient.subscribe('/topic/emergencies', () => {
+      loadData(); // auto refresh
+    });
+
+  }, () => {
+    document.getElementById('ws-status').textContent = '🔴 Disconnected';
+    document.getElementById('ws-status').className = 'badge bg-danger';
+  });
+
+  function loadData() {
+    fetch('/api/emergencies')
+      .then(res => res.json())
+      .then(data => {
+        renderMarkers(data);
+        renderList(data);
+      });
+  }
+
+  function renderMarkers(data) {
+    clusterGroup.clearLayers();
+
+    data.forEach(e => {
+      const lat = Number(e.latitude), lng = Number(e.longitude);
+      if (isNaN(lat) || isNaN(lng)) return;
+
+      const marker = L.marker([lat, lng])
+        .bindPopup(`
+          <b>${e.type}</b><br>
+          ${e.location}<br>
+          Status: ${e.status}<br>
+          ${e.reporterName ? `👤 ${e.reporterName} (${e.reporterPhone})<br>` : ''}
+          ${e.trackingId ? `🔖 ${e.trackingId}` : ''}
+        `);
+
+      clusterGroup.addLayer(marker);
+    });
+
+    if (clusterGroup.getLayers().length > 0) {
+      map.fitBounds(clusterGroup.getBounds().pad(0.2));
+    }
+  }
+
+  function renderList(data) {
+    const el = document.getElementById('list');
+
+    el.innerHTML = data.map(e => `
+      <div class="col-md-4">
+        <div class="card p-3 emergency-card" onclick="panTo(${e.latitude},${e.longitude})">
+          <b>${e.type}</b><br>
+          ${e.location}<br>
+          <small>Status: ${e.status}</small><br>
+          ${e.reporterName ? `<small>👤 ${e.reporterName}</small><br>` : ''}
+          ${e.trackingId ? `<small>🔖 ${e.trackingId}</small><br>` : ''}
+          <button class="btn btn-sm btn-success mt-2"
+            onclick="event.stopPropagation(); resolveEmergency(${e.id})">Resolve</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function panTo(lat, lng) {
+    if (!lat || !lng) return;
+    map.flyTo([lat, lng], 15);
+  }
+
+  function addEmergency() {
+    const body = {
+      type: document.getElementById('type').value.toUpperCase(),
+      location: document.getElementById('location').value,
+      status: document.getElementById('status').value.toUpperCase(),
+      latitude: parseFloat(document.getElementById('lat').value),
+      longitude: parseFloat(document.getElementById('lng').value)
+    };
+
+    fetch('/api/emergencies', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(() => loadData());
+  }
+
+  function resolveEmergency(id) {
+    fetch(`/api/emergencies/${id}`)
+      .then(res => res.json())
+      .then(e => {
+        e.status = 'RESOLVED';
+        return fetch(`/api/emergencies/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(e)
+        });
+      });
+  }
+
+  loadData();
+</script>
+</body>
+</html>

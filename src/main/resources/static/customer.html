@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Report an Emergency</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
+
+  <style>
+    body { background: #fff8f8; }
+    #map { height: 300px; border-radius: 12px; border: 1px solid #dee2e6; }
+    .status-badge { font-size: 1.1rem; padding: 0.5rem 1.2rem; border-radius: 20px; }
+    .tracking-box { background: #f8f9fa; border-radius: 12px; padding: 1.5rem; }
+    .pulse { animation: pulse 1.5s infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container mt-4" style="max-width: 680px;">
+
+  <h1 class="text-center mb-1">🆘 Report an Emergency</h1>
+
+  <div id="reportSection" class="card p-4 mb-4">
+
+    <input id="reporterName" class="form-control mb-2" placeholder="Your Name"/>
+    <input id="reporterPhone" class="form-control mb-2" placeholder="Phone Number"/>
+
+    <select id="type" class="form-select mb-2">
+      <option value="">Select type</option>
+      <option value="FIRE">Fire</option>
+      <option value="MEDICAL">Medical</option>
+      <option value="POLICE">Police</option>
+    </select>
+
+    <input id="location" class="form-control mb-2" placeholder="Location"/>
+
+    <div id="map"></div>
+
+    <div class="d-flex gap-2 mt-2">
+      <input id="lat" class="form-control" placeholder="Lat" readonly/>
+      <input id="lng" class="form-control" placeholder="Lng" readonly/>
+    </div>
+
+    <button class="btn btn-danger w-100 mt-3" onclick="submitEmergency()">Report</button>
+  </div>
+
+  <div id="trackingSection" class="card p-4 d-none text-center">
+    <h4>Emergency Reported</h4>
+    <h2 id="trackingIdDisplay"></h2>
+
+    <div class="tracking-box mt-3">
+      <span id="statusBadge" class="badge bg-danger">ACTIVE</span>
+      <p id="wsLive" class="pulse">Listening for updates...</p>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+
+<script>
+// 🔥 MAP SETUP
+const map = L.map('map').setView([23.2599, 77.4126], 12);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+let marker = null;
+
+// 🔥 IMPORTANT FIX (forces map to render properly)
+setTimeout(() => {
+  map.invalidateSize();
+}, 500);
+
+// 🔥 CLICK EVENT (FIXED)
+map.on('click', function(e) {
+  const lat = e.latlng.lat.toFixed(6);
+  const lng = e.latlng.lng.toFixed(6);
+
+  document.getElementById('lat').value = lat;
+  document.getElementById('lng').value = lng;
+
+  if (marker) map.removeLayer(marker);
+
+  marker = L.marker([lat, lng]).addTo(map)
+    .bindPopup("📍 Selected Location")
+    .openPopup();
+});
+
+// 🔥 WEBSOCKET
+let stompClient = null;
+let trackingSubscription = null;
+
+function connectWebSocket(trackingId) {
+  if (stompClient && stompClient.connected) {
+    subscribe(trackingId);
+    return;
+  }
+
+  const socket = new SockJS('/ws');
+  stompClient = Stomp.over(socket);
+
+  stompClient.connect({}, function() {
+    subscribe(trackingId);
+  });
+}
+
+function subscribe(trackingId) {
+  if (trackingSubscription) trackingSubscription.unsubscribe();
+
+  trackingSubscription = stompClient.subscribe(
+    `/topic/track/${trackingId}`,
+    function(msg) {
+      const data = JSON.parse(msg.body);
+      updateStatus(data.status);
+    }
+  );
+}
+
+// 🔥 STATUS UPDATE
+function updateStatus(status) {
+  const badge = document.getElementById('statusBadge');
+
+  if (status === 'RESOLVED') {
+    badge.className = "badge bg-success";
+    badge.textContent = "RESOLVED";
+    document.getElementById('wsLive').textContent = "Emergency resolved";
+  }
+}
+
+// 🔥 SUBMIT
+function submitEmergency() {
+  const lat = parseFloat(document.getElementById('lat').value);
+  const lng = parseFloat(document.getElementById('lng').value);
+
+  if (isNaN(lat) || isNaN(lng)) {
+    alert("Please click on map to select location");
+    return;
+  }
+
+  const body = {
+    reporterName: document.getElementById('reporterName').value,
+    reporterPhone: document.getElementById('reporterPhone').value,
+    type: document.getElementById('type').value,
+    location: document.getElementById('location').value,
+    status: "ACTIVE",
+    latitude: lat,
+    longitude: lng
+  };
+
+  fetch('/api/emergencies', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById('reportSection').classList.add('d-none');
+    document.getElementById('trackingSection').classList.remove('d-none');
+
+    document.getElementById('trackingIdDisplay').textContent = data.trackingId;
+
+    connectWebSocket(data.trackingId);
+  });
+}
+</script>
+
+</body>
+</html>
