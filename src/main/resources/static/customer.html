@@ -1,178 +1,320 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Report an Emergency</title>
-
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <title>Emergex — Report</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
-
   <style>
-    body { background: #fff8f8; }
-    #map { height: 300px; border-radius: 12px; border: 1px solid #dee2e6; }
-    .status-badge { font-size: 1.1rem; padding: 0.5rem 1.2rem; border-radius: 20px; }
-    .tracking-box { background: #f8f9fa; border-radius: 12px; padding: 1.5rem; }
-    .pulse { animation: pulse 1.5s infinite; }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#0b0d12; --bg2:#10131a; --bg3:#161921; --surface:#1c2030;
+      --border:#252a38; --border2:#2e3549; --text:#e2e6f0; --muted:#6b7590;
+      --accent:#e53935; --success:#1aaa72; --warning:#f4a623; --info:#4a9eff;
+      --font:'DM Sans',sans-serif; --mono:'DM Mono',monospace; --r:10px; --rl:16px;
     }
+    [data-theme="light"] {
+      --bg:#f0f2f8; --bg2:#ffffff; --bg3:#e8ebf4; --surface:#ffffff;
+      --border:#dde2f0; --border2:#c8cfe8; --text:#111827; --muted:#6b7280;
+      --accent:#e53935; --success:#0a7a52; --warning:#b07300; --info:#1a5fb4;
+    }
+    body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13px;line-height:1.5;min-height:100vh;transition:background .25s,color .25s}
+
+    .top-nav{position:sticky;top:0;z-index:100;background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:12px}
+    .nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none}
+    .nav-logo-icon{width:26px;height:26px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px}
+    .nav-logo-name{font-size:14px;font-weight:600;color:var(--text)}
+    .nav-spacer{flex:1}
+    .nav-btn{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--text);font-size:12px;cursor:pointer;font-family:var(--font);transition:.15s}
+    .nav-btn:hover{background:var(--border)}
+    .nav-admin{background:var(--accent);border:none;color:#fff}
+    .nav-admin:hover{opacity:.85}
+
+    .page-wrap{max-width:520px;margin:0 auto;padding:28px 16px 60px}
+
+    .hero{text-align:center;margin-bottom:28px}
+    .hero-icon{font-size:40px;margin-bottom:10px}
+    .hero-title{font-size:22px;font-weight:600;margin-bottom:6px}
+    .hero-sub{font-size:13px;color:var(--muted)}
+
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:16px}
+    .card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+    .card-title{font-size:13px;font-weight:600}
+    .card-body{padding:20px}
+
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+    .form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+    .form-group:last-child{margin-bottom:0}
+    .form-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+    .form-input,.form-select{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;width:100%;transition:border-color .15s}
+    .form-input:focus,.form-select:focus{border-color:var(--accent)}
+    .form-select option{background:var(--bg2)}
+    .form-input::placeholder{color:var(--muted)}
+
+    #map{height:200px;border-radius:8px;margin-bottom:8px;border:1px solid var(--border)}
+    .map-hint{font-size:11px;color:var(--muted);text-align:center;margin-bottom:12px}
+    .coord-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end}
+    .loc-btn{background:var(--info);border:none;border-radius:8px;padding:10px 12px;color:#fff;font-family:var(--font);font-size:12px;cursor:pointer;white-space:nowrap;transition:.15s}
+    .loc-btn:hover{opacity:.85}
+
+    .submit-btn{width:100%;background:var(--accent);border:none;border-radius:10px;padding:13px;color:#fff;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:.15s;margin-top:4px}
+    .submit-btn:hover{opacity:.9}
+    .submit-btn:active{transform:scale(.99)}
+
+    /* tracking success state */
+    .success-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:16px;text-align:center}
+    .success-header{background:linear-gradient(135deg,#1aaa72,#0a7a52);padding:28px 20px}
+    .success-icon{font-size:36px;margin-bottom:8px}
+    .success-title{font-size:16px;font-weight:600;color:#fff;margin-bottom:4px}
+    .success-sub{font-size:12px;color:rgba(255,255,255,.75)}
+    .success-body{padding:24px}
+    .tracking-id-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px}
+    .tracking-id-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+    .tracking-id-val{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--accent);letter-spacing:2px}
+    .status-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px}
+    .status-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+    .status-pill{display:inline-block;padding:6px 18px;border-radius:20px;font-size:13px;font-weight:600}
+    .status-pill.active{background:rgba(229,57,53,.15);color:var(--accent)}
+    .status-pill.resolved{background:rgba(26,170,114,.15);color:var(--success)}
+    .ws-live{font-size:11px;color:var(--success);margin-top:8px;animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .another-btn{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 20px;color:var(--text);font-family:var(--font);font-size:13px;cursor:pointer;transition:.15s}
+    .another-btn:hover{background:var(--border)}
+
+    /* track section */
+    .track-row{display:flex;gap:8px}
+    .track-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;transition:border-color .15s}
+    .track-input:focus{border-color:var(--info)}
+    .track-input::placeholder{color:var(--muted);font-family:var(--font)}
+    .track-btn{background:var(--info);border:none;border-radius:8px;padding:10px 16px;color:#fff;font-family:var(--font);font-size:13px;cursor:pointer;transition:.15s}
+    .track-btn:hover{opacity:.85}
+    #track-result{margin-top:12px}
+    .track-found{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px}
+    .track-found-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .track-type{font-size:13px;font-weight:600}
+    .track-loc{font-size:12px;color:var(--muted);margin-bottom:4px}
+    .track-id{font-family:var(--mono);font-size:11px;color:var(--muted)}
+    .track-err{background:rgba(229,57,53,.08);border:1px solid rgba(229,57,53,.2);border-radius:8px;padding:12px;color:var(--accent);font-size:12px;text-align:center}
+
+    ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
   </style>
 </head>
 <body>
 
-<div class="container mt-4" style="max-width: 680px;">
+<nav class="top-nav">
+  <div class="nav-logo">
+    <div class="nav-logo-icon">🚨</div>
+    <div class="nav-logo-name">EMERGEX</div>
+  </div>
+  <div class="nav-spacer"></div>
+  <button class="nav-btn" onclick="toggleTheme()" id="theme-btn">☀️ Light mode</button>
+  <button class="nav-btn nav-admin" onclick="location.href='/'">Admin →</button>
+</nav>
 
-  <h1 class="text-center mb-1">🆘 Report an Emergency</h1>
+<div class="page-wrap">
 
-  <div id="reportSection" class="card p-4 mb-4">
-
-    <input id="reporterName" class="form-control mb-2" placeholder="Your Name"/>
-    <input id="reporterPhone" class="form-control mb-2" placeholder="Phone Number"/>
-
-    <select id="type" class="form-select mb-2">
-      <option value="">Select type</option>
-      <option value="FIRE">Fire</option>
-      <option value="MEDICAL">Medical</option>
-      <option value="POLICE">Police</option>
-    </select>
-
-    <input id="location" class="form-control mb-2" placeholder="Location"/>
-
-    <div id="map"></div>
-
-    <div class="d-flex gap-2 mt-2">
-      <input id="lat" class="form-control" placeholder="Lat" readonly/>
-      <input id="lng" class="form-control" placeholder="Lng" readonly/>
-    </div>
-
-    <button class="btn btn-danger w-100 mt-3" onclick="submitEmergency()">Report</button>
+  <div class="hero">
+    <div class="hero-icon">🆘</div>
+    <div class="hero-title">Report an Emergency</div>
+    <div class="hero-sub">Your report goes directly to emergency responders in real-time</div>
   </div>
 
-  <div id="trackingSection" class="card p-4 d-none text-center">
-    <h4>Emergency Reported</h4>
-    <h2 id="trackingIdDisplay"></h2>
+  <!-- REPORT FORM -->
+  <div class="card" id="report-card">
+    <div class="card-header">
+      <span>📋</span>
+      <div class="card-title">Emergency Details</div>
+    </div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:0">
+          <div class="form-label">Your name *</div>
+          <input id="r-name" class="form-input" placeholder="Full name"/>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <div class="form-label">Phone number *</div>
+          <input id="r-phone" class="form-input" placeholder="+91 XXXXX XXXXX" type="tel"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Emergency type *</div>
+        <select id="r-type" class="form-select">
+          <option value="">— Select type —</option>
+          <option value="FIRE">🔥 Fire</option>
+          <option value="MEDICAL">🏥 Medical</option>
+          <option value="POLICE">🚔 Police</option>
+          <option value="ACCIDENT">🚗 Accident</option>
+          <option value="FLOOD">🌊 Flood</option>
+          <option value="OTHER">⚠️ Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Location description *</div>
+        <input id="r-loc" class="form-input" placeholder="e.g. Near DB Mall, Bhopal"/>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Pin on map <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(tap to mark)</span></div>
+        <div id="map"></div>
+        <div class="map-hint">or use your current location</div>
+        <div class="coord-row">
+          <input id="r-lat" class="form-input" placeholder="Latitude" type="number" step="any" readonly/>
+          <input id="r-lng" class="form-input" placeholder="Longitude" type="number" step="any" readonly/>
+          <button class="loc-btn" onclick="useMyLocation()">📡 My Location</button>
+        </div>
+      </div>
+      <button class="submit-btn" onclick="submitReport()">🚨 Report Emergency</button>
+    </div>
+  </div>
 
-    <div class="tracking-box mt-3">
-      <span id="statusBadge" class="badge bg-danger">ACTIVE</span>
-      <p id="wsLive" class="pulse">Listening for updates...</p>
+  <!-- SUCCESS / TRACKING STATE -->
+  <div class="success-card" id="success-card" style="display:none">
+    <div class="success-header">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Emergency Reported!</div>
+      <div class="success-sub">Responders have been notified</div>
+    </div>
+    <div class="success-body">
+      <div class="tracking-id-box">
+        <div class="tracking-id-label">Your tracking ID</div>
+        <div class="tracking-id-val" id="disp-tracking">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px">Save this to track your emergency</div>
+      </div>
+      <div class="status-box">
+        <div class="status-label">Current status</div>
+        <div><span class="status-pill active" id="disp-status">🔴 ACTIVE</span></div>
+        <div class="ws-live" id="ws-live-msg">⚡ Listening for updates...</div>
+      </div>
+      <button class="another-btn" onclick="reportAnother()">+ Report another emergency</button>
+    </div>
+  </div>
+
+  <!-- TRACK BY ID -->
+  <div class="card">
+    <div class="card-header">
+      <span>🔎</span>
+      <div class="card-title">Track existing emergency</div>
+    </div>
+    <div class="card-body">
+      <div class="track-row">
+        <input class="track-input" id="track-input" placeholder="e.g. TRK-A3F9X2"/>
+        <button class="track-btn" onclick="trackById()">Track</button>
+      </div>
+      <div id="track-result"></div>
     </div>
   </div>
 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 <script>
-// 🔥 MAP SETUP
-const map = L.map('map').setView([23.2599, 77.4126], 12);
+  function toggleTheme(){const d=document.documentElement,l=d.getAttribute('data-theme')==='dark';d.setAttribute('data-theme',l?'light':'dark');document.getElementById('theme-btn').textContent=l?'🌙 Dark mode':'☀️ Light mode'}
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© OpenStreetMap contributors'
-}).addTo(map);
+  const map=L.map('map').setView([23.2599,77.4126],12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(map);
+  let pin=null;
+  map.on('click',e=>{
+    document.getElementById('r-lat').value=e.latlng.lat.toFixed(6);
+    document.getElementById('r-lng').value=e.latlng.lng.toFixed(6);
+    if(pin)map.removeLayer(pin);
+    pin=L.marker([e.latlng.lat,e.latlng.lng]).addTo(map).bindPopup('📍 Emergency location').openPopup();
+  });
 
-let marker = null;
-
-// 🔥 IMPORTANT FIX (forces map to render properly)
-setTimeout(() => {
-  map.invalidateSize();
-}, 500);
-
-// 🔥 CLICK EVENT (FIXED)
-map.on('click', function(e) {
-  const lat = e.latlng.lat.toFixed(6);
-  const lng = e.latlng.lng.toFixed(6);
-
-  document.getElementById('lat').value = lat;
-  document.getElementById('lng').value = lng;
-
-  if (marker) map.removeLayer(marker);
-
-  marker = L.marker([lat, lng]).addTo(map)
-    .bindPopup("📍 Selected Location")
-    .openPopup();
-});
-
-// 🔥 WEBSOCKET
-let stompClient = null;
-let trackingSubscription = null;
-
-function connectWebSocket(trackingId) {
-  if (stompClient && stompClient.connected) {
-    subscribe(trackingId);
-    return;
+  function useMyLocation(){
+    if(!navigator.geolocation)return alert('Geolocation not supported');
+    navigator.geolocation.getCurrentPosition(pos=>{
+      const la=pos.coords.latitude,ln=pos.coords.longitude;
+      document.getElementById('r-lat').value=la.toFixed(6);
+      document.getElementById('r-lng').value=ln.toFixed(6);
+      map.flyTo([la,ln],15);
+      if(pin)map.removeLayer(pin);
+      pin=L.marker([la,ln]).addTo(map).bindPopup('📍 Your location').openPopup();
+    });
   }
 
-  const socket = new SockJS('/ws');
-  stompClient = Stomp.over(socket);
+  let stomp=null,trackSub=null;
 
-  stompClient.connect({}, function() {
-    subscribe(trackingId);
-  });
-}
+  function connectWS(trackingId){
+    if(stomp&&stomp.connected){subscribeTracking(trackingId);return}
+    const s=new SockJS('/ws');
+    stomp=Stomp.over(s);stomp.debug=null;
+    stomp.connect({},()=>subscribeTracking(trackingId));
+  }
 
-function subscribe(trackingId) {
-  if (trackingSubscription) trackingSubscription.unsubscribe();
+  function subscribeTracking(trackingId){
+    if(trackSub)trackSub.unsubscribe();
+    trackSub=stomp.subscribe(`/topic/track/${trackingId}`,msg=>{
+      const e=JSON.parse(msg.body);updateStatus(e.status);
+    });
+  }
 
-  trackingSubscription = stompClient.subscribe(
-    `/topic/track/${trackingId}`,
-    function(msg) {
-      const data = JSON.parse(msg.body);
-      updateStatus(data.status);
+  function updateStatus(status){
+    const pill=document.getElementById('disp-status');
+    const msg=document.getElementById('ws-live-msg');
+    if(status==='RESOLVED'){
+      pill.className='status-pill resolved';pill.textContent='✅ RESOLVED';
+      msg.textContent='Your emergency has been resolved!';msg.style.animation='none';msg.style.color='var(--success)';
+    } else {
+      pill.className='status-pill active';pill.textContent='🔴 ACTIVE';
     }
-  );
-}
-
-// 🔥 STATUS UPDATE
-function updateStatus(status) {
-  const badge = document.getElementById('statusBadge');
-
-  if (status === 'RESOLVED') {
-    badge.className = "badge bg-success";
-    badge.textContent = "RESOLVED";
-    document.getElementById('wsLive').textContent = "Emergency resolved";
-  }
-}
-
-// 🔥 SUBMIT
-function submitEmergency() {
-  const lat = parseFloat(document.getElementById('lat').value);
-  const lng = parseFloat(document.getElementById('lng').value);
-
-  if (isNaN(lat) || isNaN(lng)) {
-    alert("Please click on map to select location");
-    return;
   }
 
-  const body = {
-    reporterName: document.getElementById('reporterName').value,
-    reporterPhone: document.getElementById('reporterPhone').value,
-    type: document.getElementById('type').value,
-    location: document.getElementById('location').value,
-    status: "ACTIVE",
-    latitude: lat,
-    longitude: lng
-  };
+  function submitReport(){
+    const name=document.getElementById('r-name').value.trim();
+    const phone=document.getElementById('r-phone').value.trim();
+    const type=document.getElementById('r-type').value;
+    const loc=document.getElementById('r-loc').value.trim();
+    const lat=parseFloat(document.getElementById('r-lat').value);
+    const lng=parseFloat(document.getElementById('r-lng').value);
+    if(!name||!phone||!type||!loc){alert('Please fill in all required fields.');return}
+    fetch('/api/emergencies',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reporterName:name,reporterPhone:phone,type,location:loc,status:'ACTIVE',latitude:isNaN(lat)?null:lat,longitude:isNaN(lng)?null:lng})})
+    .then(r=>r.json()).then(saved=>{
+      document.getElementById('report-card').style.display='none';
+      document.getElementById('success-card').style.display='block';
+      document.getElementById('disp-tracking').textContent=saved.trackingId;
+      updateStatus(saved.status);
+      connectWS(saved.trackingId);
+      window.scrollTo({top:0,behavior:'smooth'});
+    }).catch(()=>alert('Failed to submit. Please try again.'));
+  }
 
-  fetch('/api/emergencies', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  })
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById('reportSection').classList.add('d-none');
-    document.getElementById('trackingSection').classList.remove('d-none');
+  function reportAnother(){
+    document.getElementById('report-card').style.display='block';
+    document.getElementById('success-card').style.display='none';
+    ['r-name','r-lat','r-lng'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('r-phone').value='';
+    document.getElementById('r-loc').value='';
+    document.getElementById('r-type').value='';
+    if(pin){map.removeLayer(pin);pin=null}
+  }
 
-    document.getElementById('trackingIdDisplay').textContent = data.trackingId;
-
-    connectWebSocket(data.trackingId);
-  });
-}
+  function trackById(){
+    const tid=document.getElementById('track-input').value.trim().toUpperCase();
+    const res=document.getElementById('track-result');
+    if(!tid)return;
+    fetch(`/api/emergencies/track/${tid}`)
+    .then(r=>{if(!r.ok)throw new Error();return r.json()})
+    .then(e=>{
+      const isActive=e.status==='ACTIVE';
+      res.innerHTML=`<div class="track-found">
+        <div class="track-found-top">
+          <span class="track-type">${e.type}</span>
+          <span class="status-pill ${isActive?'active':'resolved'}" style="font-size:11px;padding:3px 10px">${isActive?'🔴 ACTIVE':'✅ RESOLVED'}</span>
+        </div>
+        <div class="track-loc">📍 ${e.location}</div>
+        ${e.reporterName?`<div class="track-loc">👤 ${e.reporterName}</div>`:''}
+        <div class="track-id">${e.trackingId}</div>
+      </div>`;
+      connectWS(tid);
+      if(trackSub)trackSub.unsubscribe();
+      trackSub=stomp.subscribe(`/topic/track/${tid}`,()=>trackById());
+    })
+    .catch(()=>{res.innerHTML=`<div class="track-err">No emergency found with ID <b>${tid}</b></div>`});
+  }
 </script>
-
 </body>
 </html>
