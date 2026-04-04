@@ -31,6 +31,9 @@ public class Emergency {
     private String trackingId;  // e.g. "TRK-A3F9X2"
     // ─────────────────────────────────────────────────
 
+    // 🔥 NEW FIELD: PRIORITY
+    private String priority; // HIGH / MEDIUM / LOW
+
     public Emergency() {}
 
     // Getters & Setters
@@ -60,4 +63,8 @@ public class Emergency {
 
     public String getTrackingId() { return trackingId; }
     public void setTrackingId(String trackingId) { this.trackingId = trackingId; }
+
+    // 🔥 NEW GETTERS/SETTERS FOR PRIORITY
+    public String getPriority() { return priority; }
+    public void setPriority(String priority) { this.priority = priority; }
 }

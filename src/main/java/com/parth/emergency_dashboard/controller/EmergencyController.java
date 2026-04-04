@@ -1,3 +1,4 @@
+
 package com.parth.emergency_dashboard.controller;
 
 import com.parth.emergency_dashboard.model.Emergency;
@@ -38,6 +39,24 @@ public class EmergencyController {
     @GetMapping
     public List<Emergency> getAll() {
         return service.getAllEmergencies();
+    }
+
+    // ✅ NEW: GET by priority
+    @GetMapping("/priority/{priority}")
+    public List<Emergency> getByPriority(@PathVariable String priority) {
+        return service.getByPriority(priority);
+    }
+
+    // ✅ NEW: GET by status
+    @GetMapping("/status/{status}")
+    public List<Emergency> getByStatus(@PathVariable String status) {
+        return service.getByStatus(status);
+    }
+
+    // ✅ NEW: Search by location
+    @GetMapping("/search")
+    public List<Emergency> search(@RequestParam String location) {
+        return service.searchByLocation(location);
     }
 
     // ✅ GET BY ID

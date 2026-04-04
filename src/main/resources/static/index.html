@@ -14,11 +14,15 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --bg:#0b0d12; --bg2:#10131a; --bg3:#161921; --surface:#1c2030;
-      --border:#252a38; --border2:#2e3549; --text:#e2e6f0; --muted:#6b7590;
+      --border:#252a38; --border2:#2e3549; --text:#e2e6f0; --muted:#7a85a0;
       --hint:#3d4560; --accent:#e53935; --accent2:#ff6b6b;
       --success:#1aaa72; --warning:#f4a623; --info:#4a9eff;
       --font:'DM Sans',sans-serif; --mono:'DM Mono',monospace;
       --r:10px; --rl:14px;
+      --fs-base: 14px;
+      --fs-sm:   12px;
+      --fs-xs:   11px;
+      --fs-lg:   16px;
     }
     [data-theme="light"] {
       --bg:#f0f2f8; --bg2:#ffffff; --bg3:#e8ebf4; --surface:#ffffff;
@@ -27,30 +31,40 @@
       --success:#0a7a52; --warning:#b07300; --info:#1a5fb4;
     }
     html,body{height:100%}
-    body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13px;line-height:1.5;transition:background .25s,color .25s}
+    body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:var(--fs-base);line-height:1.5;transition:background .25s,color .25s}
     .layout{display:grid;grid-template-columns:220px 1fr;height:100vh;overflow:hidden}
+
+    /* ── SIDEBAR ── */
     .sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column}
     .sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
-    .logo-icon{width:30px;height:30px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
-    .logo-name{font-size:15px;font-weight:600;letter-spacing:.5px}
-    .logo-sub{font-size:10px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase}
+    .logo-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .logo-name{font-size:var(--fs-lg);font-weight:600;letter-spacing:.5px}
+    .logo-sub{font-size:var(--fs-xs);color:var(--muted);letter-spacing:.5px;text-transform:uppercase}
     .nav{padding:12px 10px;flex:1;display:flex;flex-direction:column;gap:2px}
-    .nav-sec{font-size:10px;color:var(--hint);letter-spacing:1px;text-transform:uppercase;padding:12px 10px 6px}
-    .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r);cursor:pointer;color:var(--muted);font-size:13px;transition:.15s;user-select:none}
+    .nav-sec{font-size:var(--fs-xs);color:var(--hint);letter-spacing:1px;text-transform:uppercase;padding:12px 10px 6px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r);cursor:pointer;color:var(--muted);font-size:var(--fs-base);transition:.15s;user-select:none}
     .nav-item:hover{background:var(--bg3);color:var(--text)}
     .nav-item.active{background:rgba(229,57,53,.12);color:var(--accent);font-weight:500}
-    .nav-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+    .nav-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0}
     .sidebar-bottom{padding:12px 10px;border-top:1px solid var(--border)}
+
+    /* ── TOPBAR ── */
     .main{display:flex;flex-direction:column;overflow:hidden}
-    .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:12px;flex-shrink:0}
-    .topbar-title{font-size:15px;font-weight:600;flex:1}
-    .topbar-sub{font-size:11px;color:var(--muted)}
-    .ws-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--success);background:rgba(26,170,114,.1);padding:4px 10px;border-radius:20px}
-    .ws-dot{width:6px;height:6px;border-radius:50%;background:var(--success);animation:pulse 2s infinite}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-    .add-btn{background:var(--accent);border:none;border-radius:8px;padding:7px 14px;color:#fff;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:.15s}
+    .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:13px 24px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+    .topbar-left{flex:1}
+    .topbar-title{font-size:var(--fs-lg);font-weight:600}
+    .topbar-sub{font-size:var(--fs-sm);color:var(--muted)}
+    .ws-badge{display:flex;align-items:center;gap:6px;font-size:var(--fs-sm);color:var(--success);background:rgba(26,170,114,.1);padding:5px 12px;border-radius:20px}
+    .ws-dot{width:7px;height:7px;border-radius:50%;background:var(--success);animation:blink 2s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+    .add-btn{background:var(--accent);border:none;border-radius:8px;padding:8px 16px;color:#fff;font-size:var(--fs-sm);font-weight:500;cursor:pointer;font-family:var(--font);transition:.15s}
     .add-btn:hover{opacity:.85}
-    .content{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px}
+
+    /* ── VIEWS ── */
+    .view{display:none;flex:1;overflow-y:auto;padding:20px 24px;flex-direction:column;gap:16px}
+    .view.active{display:flex}
+
+    /* ── STATS ── */
     .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
     .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:16px 18px;position:relative;overflow:hidden;transition:border-color .2s}
     .stat-card:hover{border-color:var(--border2)}
@@ -59,63 +73,113 @@
     .stat-card.s-success::before{background:var(--success)}
     .stat-card.s-info::before{background:var(--info)}
     .stat-card.s-neutral::before{background:var(--border2)}
-    .stat-icon{position:absolute;top:14px;right:14px;font-size:18px;opacity:.25}
-    .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
-    .stat-val{font-size:28px;font-weight:600;line-height:1;margin-bottom:4px}
+    .stat-icon{position:absolute;top:14px;right:14px;font-size:20px;opacity:.25}
+    .stat-label{font-size:var(--fs-xs);color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+    .stat-val{font-size:30px;font-weight:600;line-height:1;margin-bottom:4px}
     .stat-val.c-red{color:var(--accent)} .stat-val.c-green{color:var(--success)} .stat-val.c-blue{color:var(--info)}
-    .stat-sub{font-size:11px;color:var(--muted)}
+    .stat-sub{font-size:var(--fs-sm);color:var(--muted)}
+
+    /* ── SECTIONS ── */
     .section-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden}
-    .section-hdr{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
-    .section-title{font-size:13px;font-weight:600}
-    #map{height:320px}
+    .section-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+    .section-title{font-size:var(--fs-base);font-weight:600}
+
+    /* ── MAP ── */
+    #map-dash{height:280px}
+    .map-view-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;flex:1;display:flex;flex-direction:column}
+    .map-toolbar{padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .map-legend{display:flex;gap:14px;align-items:center;flex:1;flex-wrap:wrap}
+    .legend-item{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-sm);color:var(--muted)}
+    .map-filter-bar{display:flex;gap:6px}
+
+    /* ── FILTERS ── */
     .filters{display:flex;gap:6px}
-    .f-btn{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--font);font-size:11px;cursor:pointer;transition:.15s}
+    .f-btn{padding:5px 13px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--font);font-size:var(--fs-sm);cursor:pointer;transition:.15s}
     .f-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
     .f-btn:hover:not(.active){border-color:var(--border2);color:var(--text)}
-    #elist{padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
-    .ecard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+
+    /* ── CARDS ── */
+    .elist-grid{padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+    .elist-grid.wide{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+    .ecard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:15px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
     .ecard:hover{border-color:var(--border2);transform:translateY(-1px)}
     .ecard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
     .ecard.is-active::before{background:var(--accent)}
     .ecard.is-resolved::before{background:var(--success)}
     .ecard-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
-    .etype{font-size:13px;font-weight:600}
-    .estatus{font-size:10px;padding:3px 8px;border-radius:20px;font-weight:500;text-transform:uppercase;letter-spacing:.3px}
+    .etype{font-size:var(--fs-base);font-weight:600}
+    .estatus{font-size:var(--fs-xs);padding:3px 9px;border-radius:20px;font-weight:500;text-transform:uppercase;letter-spacing:.3px}
     .estatus.s-a{background:rgba(229,57,53,.15);color:var(--accent)}
     .estatus.s-r{background:rgba(26,170,114,.15);color:var(--success)}
-    .ereporter{font-size:11px;color:var(--muted);margin-bottom:3px}
-    .eloc{font-size:12px;margin-bottom:6px}
-    .etracking{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px}
-    .ecoords{font-size:10px;color:var(--hint);margin-bottom:10px}
+    .ereporter{font-size:var(--fs-sm);color:var(--muted);margin-bottom:4px}
+    .eloc{font-size:var(--fs-sm);margin-bottom:6px}
+    .etracking{font-family:var(--mono);font-size:var(--fs-xs);color:var(--muted);margin-bottom:8px}
+    .ecoords{font-size:var(--fs-xs);color:var(--hint);margin-bottom:10px}
     .eactions{display:flex;gap:6px}
-    .ebtn{flex:1;padding:6px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--font);font-size:11px;cursor:pointer;transition:.15s;text-align:center}
+    .ebtn{flex:1;padding:7px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--font);font-size:var(--fs-sm);cursor:pointer;transition:.15s;text-align:center}
     .ebtn:hover{background:var(--bg3);color:var(--text)}
     .ebtn.resolve{border-color:rgba(26,170,114,.4);color:var(--success)}
     .ebtn.resolve:hover{background:rgba(26,170,114,.1)}
     .ebtn.del{border-color:rgba(229,57,53,.3);color:var(--accent)}
     .ebtn.del:hover{background:rgba(229,57,53,.1)}
-    .empty{padding:40px;text-align:center;color:var(--muted);grid-column:1/-1}
+    .ebtn.locate{border-color:rgba(74,158,255,.3);color:var(--info)}
+    .ebtn.locate:hover{background:rgba(74,158,255,.1)}
+    .empty{padding:40px;text-align:center;color:var(--muted);grid-column:1/-1;font-size:var(--fs-base)}
+
+    /* ── SEARCH ── */
+    .search-input{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 13px;color:var(--text);font-family:var(--font);font-size:var(--fs-sm);outline:none;width:220px;transition:border-color .15s}
+    .search-input:focus{border-color:var(--info)}
+    .search-input::placeholder{color:var(--muted)}
+
+W@
+
+    /* ── MODAL ── */
     .modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center}
     .modal-ov.open{display:flex}
     .modal{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:24px;width:480px;max-width:95vw}
-    .modal-title{font-size:15px;font-weight:600;margin-bottom:16px}
+    .modal-title{font-size:var(--fs-lg);font-weight:600;margin-bottom:16px}
     .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .form-full{grid-column:1/-1}
     .form-group{display:flex;flex-direction:column;gap:5px}
-    .form-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-    .form-input,.form-select{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--font);font-size:13px;transition:border-color .15s;outline:none;width:100%}
+    .form-label{font-size:var(--fs-xs);color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+    .form-input,.form-select{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:var(--font);font-size:var(--fs-base);transition:border-color .15s;outline:none;width:100%}
     .form-input:focus,.form-select:focus{border-color:var(--accent)}
     .form-select option{background:var(--bg2)}
-    .form-hint{font-size:11px;color:var(--muted);margin-top:6px}
+    .form-hint{font-size:var(--fs-sm);color:var(--muted);margin-top:6px}
     .modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
-    .btn-cancel{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 16px;color:var(--text);font-family:var(--font);font-size:13px;cursor:pointer}
-    .btn-submit{background:var(--accent);border:none;border-radius:8px;padding:8px 20px;color:#fff;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer}
+    .btn-cancel{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 18px;color:var(--text);font-family:var(--font);font-size:var(--fs-base);cursor:pointer}
+    .btn-submit{background:var(--accent);border:none;border-radius:8px;padding:9px 22px;color:#fff;font-family:var(--font);font-size:var(--fs-base);font-weight:500;cursor:pointer}
+
+    /* ── CUSTOM MARKERS ── */
+    .map-marker{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 8px rgba(0,0,0,.45);border:2px solid rgba(255,255,255,.8)}
+    .map-marker span{transform:rotate(45deg);font-size:15px;line-height:1}
+
     ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
-    .t-fire{color:#ff6b4a} .t-police{color:#4a9eff} .t-medical{color:#b06fff} .t-accident{color:#f4a623} .t-flood{color:#4ac8ff} .t-other{color:#6b7590}
+    .t-fire{color:#ff6b4a} .t-police{color:#4a9eff} .t-medical{color:#b06fff} .t-accident{color:#f4a623} .t-flood{color:#4ac8ff} .t-other{color:#7a85a0}
+
+    /* ── TOAST NOTIFICATIONS ── */
+    .toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+    .toast{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-radius:8px;border-left:4px solid;box-shadow:0 4px 12px rgba(0,0,0,.3);animation:slideIn .3s ease-out,slideOut .3s ease-out .25s forwards;font-size:var(--fs-sm);pointer-events:auto;max-width:320px;min-width:280px;line-height:1.4}
+    @keyframes slideIn{from{transform:translateX(400px);opacity:0}to{transform:translateX(0);opacity:1}}
+    @keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(400px);opacity:0}}
+    .toast.success{background:rgba(26,170,114,.15);border-left-color:var(--success);color:var(--success)}
+    .toast.error{background:rgba(229,57,53,.15);border-left-color:var(--accent);color:var(--accent)}
+    .toast.warning{background:rgba(244,166,35,.15);border-left-color:var(--warning);color:var(--warning)}
+    .toast.info{background:rgba(74,158,255,.15);border-left-color:var(--info);color:var(--info)}
+    .toast-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+    .toast-content{flex:1}
+    .toast-title{font-weight:600;margin-bottom:2px}
+    .toast-msg{opacity:.9}
+    .toast-close{background:none;border:none;color:inherit;cursor:pointer;padding:0;font-size:16px;flex-shrink:0;opacity:.7;transition:.15s}
+    .toast-close:hover{opacity:1}
+    .toast-progress{position:absolute;bottom:0;left:0;height:2px;background:currentColor;opacity:.5;animation:progress 3s linear forwards}
+    @keyframes progress{from{width:100%}to{width:0%}}
   </style>
 </head>
 <body>
 <div class="layout">
+
+  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-logo">
       <div class="logo-icon">🚨</div>
@@ -123,55 +187,115 @@
     </div>
     <nav class="nav">
       <div class="nav-sec">Main</div>
-      <div class="nav-item active"><span class="nav-icon">📊</span>Dashboard</div>
-      <div class="nav-item" onclick="scrollTo('elist-box')"><span class="nav-icon">🗂</span>Emergencies</div>
-      <div class="nav-item" onclick="scrollTo('map-box')"><span class="nav-icon">🗺</span>Map view</div>
+      <div class="nav-item active" id="nav-dashboard" onclick="switchView('dashboard')">
+        <span class="nav-icon">📊</span>Dashboard
+      </div>
+      <div class="nav-item" id="nav-map" onclick="switchView('map')">
+        <span class="nav-icon">🗺</span>Map view
+      </div>
+      <div class="nav-item" id="nav-emergencies" onclick="switchView('emergencies')">
+        <span class="nav-icon">🗂</span>Emergencies
+      </div>
       <div class="nav-sec">Links</div>
-      <div class="nav-item" onclick="location.href='/customer.html'"><span class="nav-icon">👤</span>Customer page</div>
+      <div class="nav-item" onclick="location.href='/customer.html'">
+        <span class="nav-icon">👤</span>Customer page
+      </div>
     </nav>
     <div class="sidebar-bottom">
-      <div class="nav-item" onclick="toggleTheme()"><span class="nav-icon" id="ticon">☀️</span><span id="tlabel">Light mode</span></div>
+      <div class="nav-item" onclick="toggleTheme()">
+        <span class="nav-icon" id="ticon">☀️</span>
+        <span id="tlabel">Light mode</span>
+      </div>
     </div>
   </aside>
 
+  <!-- MAIN -->
   <div class="main">
     <div class="topbar">
-      <div><div class="topbar-title">Dashboard</div><div class="topbar-sub">Real-time emergency management</div></div>
+      <div class="topbar-left">
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+        <div class="topbar-sub" id="topbar-sub">Real-time emergency management</div>
+      </div>
       <div id="ws-status" class="ws-badge"><div class="ws-dot"></div><span>Connecting...</span></div>
       <button class="add-btn" onclick="openModal()">+ Add Emergency</button>
     </div>
 
-    <div class="content">
+    <!-- VIEW: DASHBOARD -->
+    <div class="view active" id="view-dashboard">
       <div class="stats-row">
         <div class="stat-card s-danger"><div class="stat-icon">🔴</div><div class="stat-label">Active</div><div class="stat-val c-red" id="s-active">—</div><div class="stat-sub">Needs attention</div></div>
         <div class="stat-card s-success"><div class="stat-icon">✅</div><div class="stat-label">Resolved</div><div class="stat-val c-green" id="s-resolved">—</div><div class="stat-sub">Handled</div></div>
         <div class="stat-card s-info"><div class="stat-icon">📋</div><div class="stat-label">Total</div><div class="stat-val c-blue" id="s-total">—</div><div class="stat-sub">All time</div></div>
-        <div class="stat-card s-neutral"><div class="stat-icon">📡</div><div class="stat-label">WebSocket</div><div class="stat-val" id="s-ws" style="font-size:14px;margin-top:6px">—</div><div class="stat-sub">Real-time feed</div></div>
+        <div class="stat-card s-neutral"><div class="stat-icon">📡</div><div class="stat-label">WebSocket</div><div class="stat-val" id="s-ws" style="font-size:15px;margin-top:6px">—</div><div class="stat-sub">Real-time feed</div></div>
       </div>
 
-      <div class="section-box" id="map-box">
+      <div class="section-box">
         <div class="section-hdr">
-          <div class="section-title">📍 Live Map — Bhopal</div>
-          <div style="font-size:11px;color:var(--muted)">Click map to pin location</div>
-        </div>
-        <div id="map"></div>
-      </div>
-
-      <div class="section-box" id="elist-box">
-        <div class="section-hdr">
-          <div class="section-title">🗂 Emergencies</div>
-          <div class="filters">
-            <button class="f-btn active" onclick="setFilter('all',this)">All</button>
-            <button class="f-btn" onclick="setFilter('ACTIVE',this)">Active</button>
-            <button class="f-btn" onclick="setFilter('RESOLVED',this)">Resolved</button>
+          <div class="section-title">📍 Live Map</div>
+          <div style="font-size:var(--fs-sm);color:var(--muted)">
+            Click map to pin &nbsp;·&nbsp;
+            <span style="cursor:pointer;color:var(--info)" onclick="switchView('map')">Full map →</span>
           </div>
         </div>
-        <div id="elist"></div>
+        <div id="map-dash"></div>
+      </div>
+
+      <div class="section-box">
+        <div class="section-hdr">
+          <div class="section-title">🗂 Recent Emergencies</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span style="font-size:var(--fs-sm);color:var(--muted);cursor:pointer" onclick="switchView('emergencies')">View all →</span>
+            <div class="filters">
+              <button class="f-btn active" onclick="setFilter('all',this,'dash')">All</button>
+              <button class="f-btn" onclick="setFilter('ACTIVE',this,'dash')">Active</button>
+              <button class="f-btn" onclick="setFilter('RESOLVED',this,'dash')">Resolved</button>
+            </div>
+          </div>
+        </div>
+        <div id="elist-dash" class="elist-grid"></div>
       </div>
     </div>
+
+    <!-- VIEW: MAP -->
+    <div class="view" id="view-map">
+      <div class="map-view-wrap">
+        <div class="map-toolbar">
+          <div class="map-legend" id="map-legend"></div>
+          <div class="map-filter-bar">
+            <button class="f-btn active" onclick="setMapFilter('all',this)">All</button>
+            <button class="f-btn" onclick="setMapFilter('ACTIVE',this)">Active only</button>
+            <button class="f-btn" onclick="setMapFilter('RESOLVED',this)">Resolved only</button>
+          </div>
+        </div>
+        <div id="map-full" style="flex:1"></div>
+      </div>
+    </div>
+
+    <!-- VIEW: EMERGENCIES -->
+    <div class="view" id="view-emergencies">
+      <div class="section-box" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+        <div class="section-hdr">
+          <div class="section-title">🗂 All Emergencies</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input class="search-input" id="search-input" placeholder="🔍 Search location, type..." oninput="renderEmergencies()"/>
+            <div class="filters">
+              <button class="f-btn active" onclick="setFilter('all',this,'list')">All</button>
+              <button class="f-btn" onclick="setFilter('ACTIVE',this,'list')">Active</button>
+              <button class="f-btn" onclick="setFilter('RESOLVED',this,'list')">Resolved</button>
+            </div>
+          </div>
+        </div>
+        <div id="elist-full" class="elist-grid wide" style="overflow-y:auto;flex:1"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- MODAL -->
 <div class="modal-ov" id="modal">
   <div class="modal">
     <div class="modal-title">➕ New Emergency</div>
@@ -221,44 +345,174 @@
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 <script>
-  function toggleTheme(){const d=document.documentElement,l=d.getAttribute('data-theme')==='dark';d.setAttribute('data-theme',l?'light':'dark');document.getElementById('ticon').textContent=l?'🌙':'☀️';document.getElementById('tlabel').textContent=l?'Dark mode':'Light mode';}
-  function scrollTo(id){document.getElementById(id).scrollIntoView({behavior:'smooth'})}
-  function openModal(){document.getElementById('modal').classList.add('open')}
-  function closeModal(){document.getElementById('modal').classList.remove('open')}
-  document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeModal()});
+  // ── MARKER CONFIG ─────────────────────────────────────
+  // Each type gets a unique color + emoji + label
+  const TYPE_CONFIG = {
+    FIRE:     { color:'#e8431a', emoji:'🔥', label:'Fire'     },
+    POLICE:   { color:'#2979ff', emoji:'🚔', label:'Police'   },
+    MEDICAL:  { color:'#9c27b0', emoji:'🏥', label:'Medical'  },
+    ACCIDENT: { color:'#f57c00', emoji:'🚗', label:'Accident' },
+    FLOOD:    { color:'#0097a7', emoji:'🌊', label:'Flood'    },
+    OTHER:    { color:'#546e7a', emoji:'⚠️', label:'Other'    },
+    RESOLVED: { color:'#1aaa72', emoji:'✅', label:'Resolved' },
+  };
 
-  const map=L.map('map').setView([23.2599,77.4126],12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(map);
-  map.on('click',e=>{document.getElementById('f-lat').value=e.latlng.lat.toFixed(6);document.getElementById('f-lng').value=e.latlng.lng.toFixed(6)});
-  const cluster=L.markerClusterGroup();map.addLayer(cluster);
+  // Teardrop pin marker: pointed bottom, emoji inside
+  function makeMarker(type, isResolved) {
+    const cfg = isResolved ? TYPE_CONFIG.RESOLVED : (TYPE_CONFIG[type] || TYPE_CONFIG.OTHER);
+    const color = cfg.color;
+    const emoji = cfg.emoji;
+    // SVG teardrop pin
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 44">
+        <path d="M18 0 C8 0 0 8 0 18 C0 30 18 44 18 44 C18 44 36 30 36 18 C36 8 28 0 18 0Z"
+              fill="${color}" stroke="rgba(255,255,255,0.85)" stroke-width="1.8"/>
+        <text x="18" y="22" text-anchor="middle" dominant-baseline="central"
+              font-size="15" font-family="Apple Color Emoji,Segoe UI Emoji,sans-serif">${emoji}</text>
+      </svg>`;
+    return L.divIcon({
+      className: '',
+      html: svg,
+      iconSize: [36, 44],
+      iconAnchor: [18, 44],
+      popupAnchor: [0, -46]
+    });
+  }
 
-  const tColors={FIRE:'#ff6b4a',POLICE:'#4a9eff',MEDICAL:'#b06fff',ACCIDENT:'#f4a623',FLOOD:'#4ac8ff',OTHER:'#6b7590'};
-  const tEmoji={FIRE:'🔥',POLICE:'🚔',MEDICAL:'🏥',ACCIDENT:'🚗',FLOOD:'🌊',OTHER:'⚠️'};
-  const tClass={FIRE:'t-fire',POLICE:'t-police',MEDICAL:'t-medical',ACCIDENT:'t-accident',FLOOD:'t-flood',OTHER:'t-other'};
+  // Build legend HTML from config
+  function buildLegend() {
+    const el = document.getElementById('map-legend');
+    el.innerHTML = Object.entries(TYPE_CONFIG).map(([k, v]) =>
+      `<span class="legend-item">
+        <svg width="14" height="17" viewBox="0 0 36 44" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 0 C8 0 0 8 0 18 C0 30 18 44 18 44 C18 44 36 30 36 18 C36 8 28 0 18 0Z" fill="${v.color}"/>
+        </svg>
+        ${v.label}
+      </span>`
+    ).join('');
+  }
 
-  function renderMarkers(data){
-    cluster.clearLayers();
+  // ── THEME ─────────────────────────────────────────────
+  function toggleTheme(){
+    const d=document.documentElement,l=d.getAttribute('data-theme')==='dark';
+    d.setAttribute('data-theme',l?'light':'dark');
+    document.getElementById('ticon').textContent=l?'🌙':'☀️';
+    document.getElementById('tlabel').textContent=l?'Dark mode':'Light mode';
+  }
+
+  // ── TOAST NOTIFICATIONS ────────────────────────────────
+  function showToast(type='info',title='',message='',duration=3000){
+    const container=document.getElementById('toast-container');
+    const icons={success:'✅',error:'❌',warning:'⚠️',info:'ℹ️'};
+    const toast=document.createElement('div');
+    toast.className=`toast ${type}`;
+    toast.innerHTML=`
+      <div class="toast-icon">${icons[type]||'•'}</div>
+      <div class="toast-content">
+        ${title?`<div class="toast-title">${title}</div>`:''}
+        <div class="toast-msg">${message}</div>
+      </div>
+      <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
+      <div class="toast-progress"></div>
+    `;
+    container.appendChild(toast);
+    if(duration>0)setTimeout(()=>toast.remove(),duration);
+  }
+  function showSuccess(title='',msg=''){showToast('success',title,msg)}
+  function showError(title='',msg=''){showToast('error',title,msg)}
+  function showWarning(title='',msg=''){showToast('warning',title,msg)}
+  function showInfo(title='',msg=''){showToast('info',title,msg)}
+
+  // ── VIEW SWITCHER ─────────────────────────────────────
+  const views={
+    dashboard:   {title:'Dashboard',    sub:'Real-time emergency management'},
+    map:         {title:'Map View',     sub:'All emergencies on the map'},
+    emergencies: {title:'Emergencies',  sub:'Browse and manage all reports'}
+  };
+  let currentView='dashboard';
+
+  function switchView(v){
+    document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+    document.querySelectorAll('.nav-item[id^="nav-"]').forEach(el=>el.classList.remove('active'));
+    document.getElementById('view-'+v).classList.add('active');
+    document.getElementById('nav-'+v).classList.add('active');
+    document.getElementById('topbar-title').textContent=views[v].title;
+    document.getElementById('topbar-sub').textContent=views[v].sub;
+    currentView=v;
+    if(v==='map'){setTimeout(()=>{mapFull.invalidateSize();renderFullMarkers(allData)},50)}
+    if(v==='emergencies'){renderEmergencies()}
+  }
+
+  // ── MAPS ──────────────────────────────────────────────
+  const tEmoji = Object.fromEntries(Object.entries(TYPE_CONFIG).map(([k,v])=>[k,v.emoji]));
+  const tClass  = {FIRE:'t-fire',POLICE:'t-police',MEDICAL:'t-medical',ACCIDENT:'t-accident',FLOOD:'t-flood',OTHER:'t-other'};
+
+  // Dashboard mini map
+  const mapDash=L.map('map-dash').setView([23.2599,77.4126],12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(mapDash);
+  mapDash.on('click',e=>{document.getElementById('f-lat').value=e.latlng.lat.toFixed(6);document.getElementById('f-lng').value=e.latlng.lng.toFixed(6)});
+  const clusterDash=L.markerClusterGroup();mapDash.addLayer(clusterDash);
+
+  // Full map
+  const mapFull=L.map('map-full').setView([23.2599,77.4126],12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(mapFull);
+  mapFull.on('click',e=>{document.getElementById('f-lat').value=e.latlng.lat.toFixed(6);document.getElementById('f-lng').value=e.latlng.lng.toFixed(6)});
+  const clusterFull=L.markerClusterGroup();mapFull.addLayer(clusterFull);
+
+  let mapFilter='all';
+  function setMapFilter(f,el){
+    mapFilter=f;
+    document.querySelectorAll('.map-filter-bar .f-btn').forEach(b=>b.classList.remove('active'));
+    el.classList.add('active');
+    renderFullMarkers(mapFilter==='all'?allData:allData.filter(e=>e.status===mapFilter));
+  }
+
+  function popupHTML(e){
+    const cfg = e.status==='RESOLVED' ? TYPE_CONFIG.RESOLVED : (TYPE_CONFIG[e.type]||TYPE_CONFIG.OTHER);
+    return `
+      <div style="font-family:'DM Sans',sans-serif;min-width:160px">
+        <div style="font-weight:600;font-size:14px;color:${cfg.color};margin-bottom:4px">${cfg.emoji} ${e.type}</div>
+        <div style="font-size:12px;margin-bottom:2px">📍 ${e.location}</div>
+        <div style="font-size:11px;color:#888;margin-bottom:4px">Status: <b style="color:${cfg.color}">${e.status}</b></div>
+        ${e.reporterName?`<div style="font-size:11px;color:#888">👤 ${e.reporterName} · ${e.reporterPhone}</div>`:''}
+        ${e.trackingId?`<div style="font-size:10px;font-family:monospace;color:#aaa;margin-top:3px">${e.trackingId}</div>`:''}
+      </div>`;
+  }
+
+  function renderDashMarkers(data){
+    clusterDash.clearLayers();
     data.forEach(e=>{
       const la=Number(e.latitude),ln=Number(e.longitude);
       if(isNaN(la)||isNaN(ln))return;
-      const c=e.status==='RESOLVED'?'#1aaa72':(tColors[e.type]||'#e53935');
-      const icon=L.divIcon({className:'',html:`<div style="width:12px;height:12px;border-radius:50%;background:${c};border:2px solid rgba(255,255,255,.7)"></div>`,iconSize:[12,12],iconAnchor:[6,6]});
-      L.marker([la,ln],{icon}).bindPopup(`<b style="color:${c}">${e.type}</b><br>${e.location}<br><small>${e.status}</small>${e.reporterName?`<br><small>👤 ${e.reporterName}</small>`:''}`).addTo(cluster);
+      L.marker([la,ln],{icon:makeMarker(e.type,e.status==='RESOLVED')})
+        .bindPopup(popupHTML(e)).addTo(clusterDash);
     });
-    if(cluster.getLayers().length>0)map.fitBounds(cluster.getBounds().pad(0.2));
+    if(clusterDash.getLayers().length>0)mapDash.fitBounds(clusterDash.getBounds().pad(0.2));
   }
 
+  function renderFullMarkers(data){
+    clusterFull.clearLayers();
+    data.forEach(e=>{
+      const la=Number(e.latitude),ln=Number(e.longitude);
+      if(isNaN(la)||isNaN(ln))return;
+      L.marker([la,ln],{icon:makeMarker(e.type,e.status==='RESOLVED')})
+        .bindPopup(popupHTML(e)).addTo(clusterFull);
+    });
+    if(clusterFull.getLayers().length>0)mapFull.fitBounds(clusterFull.getBounds().pad(0.2));
+  }
+
+  // ── WEBSOCKET ─────────────────────────────────────────
   const wsEl=document.getElementById('ws-status');
   const sock=new SockJS('/ws');
-  const stomp=Stomp.over(sock);
-  stomp.debug=null;
+  const stomp=Stomp.over(sock);stomp.debug=null;
   stomp.connect({},()=>{
     wsEl.innerHTML='<div class="ws-dot"></div><span>Live</span>';
     document.getElementById('s-ws').textContent='Connected';
     stomp.subscribe('/topic/emergencies',()=>loadData());
   },()=>{wsEl.innerHTML='<span>🔴 Disconnected</span>';wsEl.style.color='var(--accent)'});
 
-  let allData=[],curFilter='all';
+  // ── DATA ──────────────────────────────────────────────
+  let allData=[],dashFilter='all',listFilter='all';
 
   function loadData(){
     fetch('/api/emergencies').then(r=>r.json()).then(data=>{
@@ -266,20 +520,26 @@
       document.getElementById('s-active').textContent=data.filter(e=>e.status==='ACTIVE').length;
       document.getElementById('s-resolved').textContent=data.filter(e=>e.status==='RESOLVED').length;
       document.getElementById('s-total').textContent=data.length;
-      renderMarkers(data);renderList();
+      renderDashMarkers(data);
+      renderDashCards();
+      if(currentView==='map')renderFullMarkers(mapFilter==='all'?data:data.filter(e=>e.status===mapFilter));
+      if(currentView==='emergencies')renderEmergencies();
     });
   }
 
-  function setFilter(f,el){curFilter=f;document.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderList()}
+  function setFilter(f,el,ctx){
+    if(ctx==='dash'){dashFilter=f;document.querySelectorAll('#view-dashboard .f-btn').forEach(b=>b.classList.remove('active'))}
+    else{listFilter=f;document.querySelectorAll('#view-emergencies .f-btn').forEach(b=>b.classList.remove('active'))}
+    el.classList.add('active');
+    if(ctx==='dash')renderDashCards(); else renderEmergencies();
+  }
 
-  function renderList(){
-    const el=document.getElementById('elist');
-    const d=curFilter==='all'?allData:allData.filter(e=>e.status===curFilter);
-    if(!d.length){el.innerHTML='<div class="empty">No emergencies found.</div>';return}
-    el.innerHTML=d.map(e=>`
-      <div class="ecard ${e.status==='ACTIVE'?'is-active':'is-resolved'}" onclick="flyTo(${e.latitude},${e.longitude})">
+  function cardHTML(e,showLocate=false){
+    const cfg=TYPE_CONFIG[e.type]||TYPE_CONFIG.OTHER;
+    return `
+      <div class="ecard ${e.status==='ACTIVE'?'is-active':'is-resolved'}" onclick="flyToOnDash(${e.latitude},${e.longitude})">
         <div class="ecard-top">
-          <span class="etype ${tClass[e.type]||'t-other'}">${tEmoji[e.type]||'⚠️'} ${e.type}</span>
+          <span class="etype ${tClass[e.type]||'t-other'}">${cfg.emoji} ${e.type}</span>
           <span class="estatus ${e.status==='ACTIVE'?'s-a':'s-r'}">${e.status}</span>
         </div>
         ${e.reporterName?`<div class="ereporter">👤 ${e.reporterName} · 📞 ${e.reporterPhone}</div>`:''}
@@ -287,26 +547,76 @@
         ${e.trackingId?`<div class="etracking">${e.trackingId}</div>`:''}
         ${e.latitude?`<div class="ecoords">${e.latitude}, ${e.longitude}</div>`:''}
         <div class="eactions">
-          ${e.status==='ACTIVE'?`<button class="ebtn resolve" onclick="event.stopPropagation();resolve(${e.id})">✓ Resolve</button>`:`<button class="ebtn" style="opacity:.4;cursor:default">✓ Done</button>`}
+          ${e.status==='ACTIVE'
+            ?`<button class="ebtn resolve" onclick="event.stopPropagation();resolve(${e.id})">✓ Resolve</button>`
+            :`<button class="ebtn" style="opacity:.4;cursor:default">✓ Done</button>`}
+          ${showLocate&&e.latitude?`<button class="ebtn locate" onclick="event.stopPropagation();flyToOnMap(${e.latitude},${e.longitude})">📍 Map</button>`:''}
           <button class="ebtn del" onclick="event.stopPropagation();del(${e.id})">✕ Delete</button>
         </div>
-      </div>`).join('');
+      </div>`;
   }
 
-  function flyTo(la,ln){if(!la||!ln)return;map.flyTo([la,ln],15,{duration:1});document.getElementById('map-box').scrollIntoView({behavior:'smooth'})}
+  function renderDashCards(){
+    const el=document.getElementById('elist-dash');
+    const d=dashFilter==='all'?allData:allData.filter(e=>e.status===dashFilter);
+    el.innerHTML=d.length?d.map(e=>cardHTML(e,false)).join(''):'<div class="empty">No emergencies found.</div>';
+  }
+
+  function renderEmergencies(){
+    const el=document.getElementById('elist-full');
+    const search=(document.getElementById('search-input').value||'').toLowerCase();
+    let d=listFilter==='all'?allData:allData.filter(e=>e.status===listFilter);
+    if(search)d=d.filter(e=>(e.type+e.location+(e.reporterName||'')).toLowerCase().includes(search));
+    el.innerHTML=d.length?d.map(e=>cardHTML(e,true)).join(''):'<div class="empty">No emergencies found.</div>';
+  }
+
+  function flyToOnDash(la,ln){if(!la||!ln)return;mapDash.flyTo([la,ln],15,{duration:1});switchView('dashboard')}
+  function flyToOnMap(la,ln){if(!la||!ln)return;switchView('map');setTimeout(()=>mapFull.flyTo([la,ln],16,{duration:1}),100)}
+
+  // ── MODAL ─────────────────────────────────────────────
+  function openModal(){document.getElementById('modal').classList.add('open')}
+  function closeModal(){document.getElementById('modal').classList.remove('open')}
+  document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeModal()});
 
   function addEmergency(){
     const type=document.getElementById('f-type').value,loc=document.getElementById('f-location').value.trim();
-    if(!type||!loc){alert('Please fill in Type and Location.');return}
-    fetch('/api/emergencies',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,location:loc,status:document.getElementById('f-status').value,latitude:parseFloat(document.getElementById('f-lat').value)||null,longitude:parseFloat(document.getElementById('f-lng').value)||null})}).then(()=>{closeModal();loadData()});
+    if(!type||!loc){showError('Validation Error','Please fill in Type and Location.');return}
+    fetch('/api/emergencies',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({type,location:loc,status:document.getElementById('f-status').value,
+        latitude:parseFloat(document.getElementById('f-lat').value)||null,
+        longitude:parseFloat(document.getElementById('f-lng').value)||null})
+    }).then(r=>{
+      if(!r.ok)throw new Error('Failed to create emergency');
+      closeModal();
+      document.getElementById('f-type').value='';
+      document.getElementById('f-location').value='';
+      document.getElementById('f-lat').value='';
+      document.getElementById('f-lng').value='';
+      showSuccess('Emergency Created','New emergency report has been added');
+      loadData();
+    }).catch(e=>{showError('Error','Failed to create emergency report')});
   }
 
   function resolve(id){
-    fetch(`/api/emergencies/${id}`).then(r=>r.json()).then(e=>{e.status='RESOLVED';return fetch(`/api/emergencies/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(e)})}).then(()=>loadData());
+    fetch(`/api/emergencies/${id}`).then(r=>r.json()).then(e=>{
+      e.status='RESOLVED';
+      return fetch(`/api/emergencies/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(e)});
+    }).then(()=>{
+      showSuccess('Resolved','Emergency has been marked as resolved');
+      loadData();
+    }).catch(e=>{showError('Error','Failed to resolve emergency')});
   }
 
-  function del(id){if(!confirm('Delete this emergency?'))return;fetch(`/api/emergencies/${id}`,{method:'DELETE'}).then(()=>loadData())}
+  function del(id){
+    if(!confirm('Delete this emergency?'))return;
+    fetch(`/api/emergencies/${id}`,{method:'DELETE'}).then(()=>{
+      showSuccess('Deleted','Emergency report has been deleted');
+      loadData();
+    }).catch(e=>{showError('Error','Failed to delete emergency')});
+  }
 
+  // ── INIT ──────────────────────────────────────────────
+  buildLegend();
   loadData();
 </script>
 </body>
