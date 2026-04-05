@@ -1,8 +1,8 @@
-
 package com.parth.emergency_dashboard.controller;
 
 import com.parth.emergency_dashboard.model.Emergency;
 import com.parth.emergency_dashboard.service.EmergencyService;
+import com.parth.emergency_dashboard.service.SmsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -17,20 +17,34 @@ public class EmergencyController {
 
     private final EmergencyService service;
     private final SimpMessagingTemplate messagingTemplate;
+    private final SmsService smsService;
 
     public EmergencyController(EmergencyService service,
-                               SimpMessagingTemplate messagingTemplate) {
+                               SimpMessagingTemplate messagingTemplate,
+                               SmsService smsService) {
         this.service = service;
         this.messagingTemplate = messagingTemplate;
+        this.smsService = smsService;
     }
 
-    // ✅ POST — add new emergency, push to admin board
+    // ✅ POST — customer reports emergency
     @PostMapping
     public Emergency addEmergency(@RequestBody @Valid Emergency emergency) {
         Emergency saved = service.addEmergency(emergency);
 
-        // Push to admin dashboard in real-time
+        // 📡 Real-time push to admin dashboard
         messagingTemplate.convertAndSend("/topic/emergencies", saved);
+
+        // 📱 SMS confirmation to reporter
+        if (saved.getReporterPhone() != null && !saved.getReporterPhone().isEmpty()) {
+            smsService.sendReportConfirmation(
+                saved.getReporterPhone(),
+                saved.getType(),
+                saved.getLocation(),
+                saved.getTrackingId(),
+                saved.getPriority()
+            );
+        }
 
         return saved;
     }
@@ -41,53 +55,61 @@ public class EmergencyController {
         return service.getAllEmergencies();
     }
 
-    // ✅ NEW: GET by priority
-    @GetMapping("/priority/{priority}")
-    public List<Emergency> getByPriority(@PathVariable String priority) {
-        return service.getByPriority(priority);
-    }
-
-    // ✅ NEW: GET by status
-    @GetMapping("/status/{status}")
-    public List<Emergency> getByStatus(@PathVariable String status) {
-        return service.getByStatus(status);
-    }
-
-    // ✅ NEW: Search by location
-    @GetMapping("/search")
-    public List<Emergency> search(@RequestParam String location) {
-        return service.searchByLocation(location);
-    }
-
     // ✅ GET BY ID
     @GetMapping("/{id}")
     public Emergency getById(@PathVariable Long id) {
         return service.getById(id);
     }
 
-    // ✅ GET BY TRACKING ID (customer tracking)
+    // ✅ GET BY TRACKING ID (customer tracking — public)
     @GetMapping("/track/{trackingId}")
     public ResponseEntity<Emergency> getByTrackingId(@PathVariable String trackingId) {
         Emergency emergency = service.getByTrackingId(trackingId);
-        if (emergency == null) {
-            return ResponseEntity.notFound().build();
-        }
+        if (emergency == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(emergency);
     }
 
-    // ✅ UPDATE — push status change to both admin + customer via WebSocket
+    // ✅ GET BY PRIORITY
+    @GetMapping("/priority/{priority}")
+    public List<Emergency> getByPriority(@PathVariable String priority) {
+        return service.getByPriority(priority);
+    }
+
+    // ✅ GET BY STATUS
+    @GetMapping("/status/{status}")
+    public List<Emergency> getByStatus(@PathVariable String status) {
+        return service.getByStatus(status);
+    }
+
+    // ✅ UPDATE — admin resolves or edits
     @PutMapping("/{id}")
     public Emergency update(@PathVariable Long id, @RequestBody Emergency emergency) {
+        boolean wasActive = false;
+        Emergency existing = service.getById(id);
+        if (existing != null) {
+            wasActive = !"RESOLVED".equals(existing.getStatus());
+        }
+
         Emergency updated = service.updateEmergency(id, emergency);
 
         if (updated != null) {
-            // Push to admin dashboard
+            // 📡 Push to admin dashboard
             messagingTemplate.convertAndSend("/topic/emergencies", updated);
 
-            // Push to customer tracking their specific emergency
-            messagingTemplate.convertAndSend(
-                "/topic/track/" + updated.getTrackingId(), updated
-            );
+            // 📡 Push to customer tracking their specific emergency
+            messagingTemplate.convertAndSend("/topic/track/" + updated.getTrackingId(), updated);
+
+            // 📱 SMS to reporter when newly resolved
+            boolean nowResolved = "RESOLVED".equals(updated.getStatus());
+            if (wasActive && nowResolved && updated.getReporterPhone() != null
+                    && !updated.getReporterPhone().isEmpty()) {
+                smsService.sendResolveNotification(
+                    updated.getReporterPhone(),
+                    updated.getType(),
+                    updated.getLocation(),
+                    updated.getTrackingId()
+                );
+            }
         }
 
         return updated;

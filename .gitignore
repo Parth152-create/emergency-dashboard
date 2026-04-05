@@ -31,7 +31,8 @@ Thumbs.db
 *.iws
 *.iml
 *.ipr
-
+# sensitive configs
+application.properties
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/

@@ -1,4 +1,3 @@
-
 package com.parth.emergency_dashboard.service;
 
 import com.parth.emergency_dashboard.model.Emergency;
@@ -38,25 +37,23 @@ public class EmergencyService {
     // ✅ Get all emergencies (sorted by priority: HIGH → MEDIUM → LOW)
     public List<Emergency> getAllEmergencies() {
         List<Emergency> list = repository.findAll();
-
         list.sort((e1, e2) ->
                 getPriorityValue(e2.getPriority()) - getPriorityValue(e1.getPriority())
         );
-
         return list;
     }
 
-    // ✅ NEW: Get emergencies by priority
+    // ✅ Get emergencies by priority
     public List<Emergency> getByPriority(String priority) {
         return repository.findByPriority(priority);
     }
 
-    // ✅ NEW: Get emergencies by status
+    // ✅ Get emergencies by status
     public List<Emergency> getByStatus(String status) {
         return repository.findByStatus(status);
     }
 
-    // ✅ NEW: Search by location
+    // ✅ Search by location
     public List<Emergency> searchByLocation(String location) {
         return repository.findByLocationContainingIgnoreCase(location);
     }
@@ -71,7 +68,7 @@ public class EmergencyService {
         return repository.findByTrackingId(trackingId).orElse(null);
     }
 
-    // ✅ Update emergency (FIXED: now handles priority properly)
+    // ✅ Update emergency — ALL fields preserved so nothing gets wiped on resolve
     public Emergency updateEmergency(Long id, Emergency updated) {
         Emergency existing = repository.findById(id).orElse(null);
 
@@ -82,7 +79,11 @@ public class EmergencyService {
             existing.setLatitude(updated.getLatitude());
             existing.setLongitude(updated.getLongitude());
 
-            // ✅ Handle priority properly
+            // ✅ Preserve reporter info — don't wipe on resolve
+            if (updated.getReporterName() != null) existing.setReporterName(updated.getReporterName());
+            if (updated.getReporterPhone() != null) existing.setReporterPhone(updated.getReporterPhone());
+
+            // ✅ Handle priority — keep existing if not provided
             if (updated.getPriority() != null && !updated.getPriority().isEmpty()) {
                 existing.setPriority(updated.getPriority());
             } else {
@@ -99,36 +100,30 @@ public class EmergencyService {
         repository.deleteById(id);
     }
 
-    // ✅ Helper: determine priority
+    // ✅ Helper: auto-determine priority from type
     private String determinePriority(String type) {
-
         if (type == null) return "LOW";
-
         switch (type.toLowerCase()) {
             case "fire":
             case "accident":
             case "medical":
                 return "HIGH";
-
             case "theft":
             case "robbery":
                 return "MEDIUM";
-
             default:
                 return "LOW";
         }
     }
 
-    // ✅ Helper: sorting priority
+    // ✅ Helper: numeric value for sorting
     private int getPriorityValue(String priority) {
         if (priority == null) return 0;
-
         switch (priority) {
-            case "HIGH": return 3;
+            case "HIGH":   return 3;
             case "MEDIUM": return 2;
-            case "LOW": return 1;
-            default: return 0;
+            case "LOW":    return 1;
+            default:       return 0;
         }
     }
 }
-
