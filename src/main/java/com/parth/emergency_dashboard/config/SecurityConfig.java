@@ -1,35 +1,43 @@
-
 package com.parth.emergency_dashboard.config;
 
 import com.parth.emergency_dashboard.model.User;
 import com.parth.emergency_dashboard.repository.UserRepository;
+import com.parth.emergency_dashboard.security.JwtFilter;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     private final UserRepository userRepository;
+    private final JwtFilter jwtFilter;
 
-    public SecurityConfig(UserRepository userRepository) {
+    // ✅ @Lazy breaks the cycle — JwtFilter is created after SecurityConfig
+    public SecurityConfig(UserRepository userRepository, @Lazy JwtFilter jwtFilter) {
         this.userRepository = userRepository;
+        this.jwtFilter = jwtFilter;
     }
 
-    // ✅ PASSWORD ENCODER
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // ✅ USER DETAILS SERVICE
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> {
@@ -43,61 +51,52 @@ public class SecurityConfig {
         };
     }
 
-    // ✅ SECURITY CONFIGURATION (FIXED)
+    // ✅ DaoAuthenticationProvider — wires BCrypt + UserDetailsService correctly
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService());
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
+            .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authenticationProvider(authenticationProvider())
             .authorizeHttpRequests(auth -> auth
-                // ✅ PUBLIC ROUTES
                 .requestMatchers(
-                    "/customer.html",
-                    "/login",
-                    "/login/**",
-                    "/index.html",   // ✅ IMPORTANT FIX
-                    "/error",        // ✅ IMPORTANT FIX
-                    "/ws/**",
-                    "/css/**", "/js/**", "/images/**",
-                    "/favicon.ico"
+                    "/", "/index.html", "/login.html", "/customer.html",
+                    "/css/**", "/js/**", "/images/**", "/favicon.ico",
+                    "/ws/**"
                 ).permitAll()
-
-                // ✅ PUBLIC API (customer side)
-                .requestMatchers(
-                    "/api/emergencies",
-                    "/api/emergencies/track/**"
-                ).permitAll()
-
-                // 🔒 EVERYTHING ELSE PROTECTED
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("POST", "/api/emergencies").permitAll()
+                .requestMatchers("GET", "/api/emergencies/track/**").permitAll()
                 .anyRequest().authenticated()
             )
-            .formLogin(form -> form
-                .loginPage("/login.html")
-                .loginProcessingUrl("/login")
-                .defaultSuccessUrl("/index.html", true) // ✅ FIXED REDIRECT
-                .failureUrl("/login?error=true")
-                .permitAll()
-            )
-            .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login?logout=true")
-                .permitAll()
-            );
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // ✅ SEED ADMIN USER
     @Bean
     public CommandLineRunner seedAdmin(PasswordEncoder encoder) {
         return args -> {
             if (userRepository.count() == 0) {
-                User admin = new User(
+                userRepository.save(new User(
                     "admin",
                     encoder.encode("admin123"),
                     "ROLE_ADMIN"
-                );
-                userRepository.save(admin);
-                System.out.println("✅ Default admin created — username: admin, password: admin123");
+                ));
+                System.out.println("✅ Admin seeded → username: admin | password: admin123");
             }
         };
     }
