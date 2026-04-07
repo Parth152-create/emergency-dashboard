@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/emergencies")
@@ -27,95 +28,112 @@ public class EmergencyController {
         this.smsService = smsService;
     }
 
-    // ✅ POST — customer reports emergency
+    // ── PUBLIC: Reporter submits emergency ────────────
     @PostMapping
     public Emergency addEmergency(@RequestBody @Valid Emergency emergency) {
         Emergency saved = service.addEmergency(emergency);
-
-        // 📡 Real-time push to admin dashboard
         messagingTemplate.convertAndSend("/topic/emergencies", saved);
-
-        // 📱 SMS confirmation to reporter
         if (saved.getReporterPhone() != null && !saved.getReporterPhone().isEmpty()) {
             smsService.sendReportConfirmation(
-                saved.getReporterPhone(),
-                saved.getType(),
-                saved.getLocation(),
-                saved.getTrackingId(),
-                saved.getPriority()
+                saved.getReporterPhone(), saved.getType(),
+                saved.getLocation(), saved.getTrackingId(), saved.getPriority()
             );
         }
-
         return saved;
     }
 
-    // ✅ GET ALL
+    // ── ADMIN: Get all emergencies ────────────────────
     @GetMapping
     public List<Emergency> getAll() {
         return service.getAllEmergencies();
     }
 
-    // ✅ GET BY ID
+    // ── ADMIN: Get by ID ──────────────────────────────
     @GetMapping("/{id}")
     public Emergency getById(@PathVariable Long id) {
         return service.getById(id);
     }
 
-    // ✅ GET BY TRACKING ID (customer tracking — public)
+    // ── PUBLIC: Reporter tracks by tracking ID ────────
     @GetMapping("/track/{trackingId}")
     public ResponseEntity<Emergency> getByTrackingId(@PathVariable String trackingId) {
         Emergency emergency = service.getByTrackingId(trackingId);
         if (emergency == null) return ResponseEntity.notFound().build();
+        // Return limited info — no full list, just their own record
         return ResponseEntity.ok(emergency);
     }
 
-    // ✅ GET BY PRIORITY
+    // ── PUBLIC: Reporter verifies identity (name + phone) ──
+    // Used on Track tab — verify the reporter owns the tracking ID
+    @PostMapping("/verify")
+    public ResponseEntity<?> verifyReporter(@RequestBody Map<String, String> body) {
+        String trackingId   = body.get("trackingId");
+        String reporterName  = body.get("reporterName");
+        String reporterPhone = body.get("reporterPhone");
+
+        if (trackingId == null || reporterName == null || reporterPhone == null) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "trackingId, reporterName and reporterPhone are required"));
+        }
+
+        Emergency emergency = service.getByTrackingId(trackingId.toUpperCase().trim());
+
+        if (emergency == null) {
+            return ResponseEntity.status(404)
+                    .body(Map.of("error", "No emergency found with that tracking ID"));
+        }
+
+        // Check name AND phone match (case-insensitive name check)
+        boolean nameMatch  = reporterName.trim().equalsIgnoreCase(emergency.getReporterName());
+        boolean phoneMatch = reporterPhone.trim().equals(emergency.getReporterPhone());
+
+        if (!nameMatch || !phoneMatch) {
+            return ResponseEntity.status(401)
+                    .body(Map.of("error", "Name or phone number does not match our records"));
+        }
+
+        // ✅ Verified — return full emergency details
+        return ResponseEntity.ok(emergency);
+    }
+
+    // ── ADMIN: Get by priority ────────────────────────
     @GetMapping("/priority/{priority}")
     public List<Emergency> getByPriority(@PathVariable String priority) {
         return service.getByPriority(priority);
     }
 
-    // ✅ GET BY STATUS
+    // ── ADMIN: Get by status ──────────────────────────
     @GetMapping("/status/{status}")
     public List<Emergency> getByStatus(@PathVariable String status) {
         return service.getByStatus(status);
     }
 
-    // ✅ UPDATE — admin resolves or edits
+    // ── ADMIN: Update (resolve etc.) ──────────────────
     @PutMapping("/{id}")
     public Emergency update(@PathVariable Long id, @RequestBody Emergency emergency) {
         boolean wasActive = false;
         Emergency existing = service.getById(id);
-        if (existing != null) {
-            wasActive = !"RESOLVED".equals(existing.getStatus());
-        }
+        if (existing != null) wasActive = !"RESOLVED".equals(existing.getStatus());
 
         Emergency updated = service.updateEmergency(id, emergency);
 
         if (updated != null) {
-            // 📡 Push to admin dashboard
             messagingTemplate.convertAndSend("/topic/emergencies", updated);
-
-            // 📡 Push to customer tracking their specific emergency
             messagingTemplate.convertAndSend("/topic/track/" + updated.getTrackingId(), updated);
 
-            // 📱 SMS to reporter when newly resolved
             boolean nowResolved = "RESOLVED".equals(updated.getStatus());
             if (wasActive && nowResolved && updated.getReporterPhone() != null
                     && !updated.getReporterPhone().isEmpty()) {
                 smsService.sendResolveNotification(
-                    updated.getReporterPhone(),
-                    updated.getType(),
-                    updated.getLocation(),
-                    updated.getTrackingId()
+                    updated.getReporterPhone(), updated.getType(),
+                    updated.getLocation(), updated.getTrackingId()
                 );
             }
         }
-
         return updated;
     }
 
-    // ✅ DELETE
+    // ── ADMIN: Delete ─────────────────────────────────
     @DeleteMapping("/{id}")
     public String delete(@PathVariable Long id) {
         service.deleteEmergency(id);

@@ -3,557 +3,605 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Emergex — Emergency Dashboard</title>
+  <title>Emergex — Report Emergency</title>
   <link rel="icon" href="data:,">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg:#0b0d12; --bg2:#10131a; --bg3:#161921; --surface:#1c2030;
-      --border:#252a38; --border2:#2e3549; --text:#e2e6f0; --muted:#6b7590;
-      --accent:#e53935; --success:#1aaa72; --warning:#f4a623; --info:#4a9eff;
-      --font:'DM Sans',sans-serif; --mono:'DM Mono',monospace; --r:10px; --rl:16px;
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0b0d12;--bg2:#10131a;--bg3:#161921;--surface:#1c2030;
+      --border:#252a38;--border2:#2e3549;--text:#e2e6f0;--muted:#7a85a0;
+      --accent:#e53935;--success:#1aaa72;--warning:#f4a623;--info:#4a9eff;
+      --high:#e53935;--medium:#f4a623;--low:#1aaa72;
+      --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;--r:10px;--rl:16px;
     }
-    [data-theme="light"] {
-      --bg:#f0f2f8; --bg2:#ffffff; --bg3:#e8ebf4; --surface:#ffffff;
-      --border:#dde2f0; --border2:#c8cfe8; --text:#111827; --muted:#6b7280;
-      --accent:#e53935; --success:#0a7a52; --warning:#b07300; --info:#1a5fb4;
+    [data-theme="light"]{
+      --bg:#f0f2f8;--bg2:#fff;--bg3:#e8ebf4;--surface:#fff;
+      --border:#dde2f0;--border2:#c8cfe8;--text:#111827;--muted:#6b7280;
+      --accent:#e53935;--success:#0a7a52;--warning:#b07300;--info:#1a5fb4;
+      --high:#e53935;--medium:#b07300;--low:#0a7a52;
     }
-    body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13px;line-height:1.5;min-height:100vh;transition:background .25s,color .25s}
+    html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;transition:background .25s,color .25s}
 
-    .top-nav{position:sticky;top:0;z-index:100;background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:12px}
-    .nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none}
-    .nav-logo-icon{width:26px;height:26px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px}
-    .nav-logo-name{font-size:14px;font-weight:600;color:var(--text)}
+    /* NAV */
+    .topnav{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
+    .nav-logo{display:flex;align-items:center;gap:10px}
+    .nav-logo-icon{width:30px;height:30px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px}
+    .nav-logo-name{font-size:15px;font-weight:600;letter-spacing:.5px}
+    .nav-tabs{display:flex;gap:4px;margin-left:24px}
+    .nav-tab{padding:6px 16px;border-radius:20px;font-size:13px;color:var(--muted);cursor:pointer;transition:.15s;border:1px solid transparent;user-select:none}
+    .nav-tab:hover{background:var(--bg3);color:var(--text)}
+    .nav-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
     .nav-spacer{flex:1}
-    .nav-btn{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--text);font-size:12px;cursor:pointer;font-family:var(--font);transition:.15s}
+    .nav-btn{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 13px;color:var(--text);font-size:12px;cursor:pointer;font-family:var(--font);transition:.15s}
     .nav-btn:hover{background:var(--border)}
-    .nav-admin{background:var(--accent);border:none;color:#fff}
-    .nav-admin:hover{opacity:.85}
 
-    .tab-nav{display:flex;gap:2px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:4px;margin-bottom:24px;max-width:fit-content;margin-left:auto;margin-right:auto}
-    .tab-btn{flex:1;padding:10px 16px;background:transparent;border:none;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;border-radius:8px;transition:.15s;font-family:var(--font)}
-    .tab-btn:hover{background:rgba(255,255,255,.05)}
-    .tab-btn.active{background:var(--accent);color:#fff}
+    /* VIEWS */
+    .view{display:none;max-width:600px;margin:0 auto;padding:28px 16px 60px}
+    .view.active{display:block}
+    .view-map{display:none;height:calc(100vh - 57px);flex-direction:column}
+    .view-map.active{display:flex}
 
-    .page-wrap{max-width:520px;margin:0 auto;padding:28px 16px 60px}
-
+    /* HERO */
     .hero{text-align:center;margin-bottom:28px}
-    .hero-icon{font-size:40px;margin-bottom:10px}
+    .hero-icon{font-size:42px;margin-bottom:10px}
     .hero-title{font-size:22px;font-weight:600;margin-bottom:6px}
-    .hero-sub{font-size:13px;color:var(--muted)}
+    .hero-sub{font-size:13px;color:var(--muted);line-height:1.6}
 
+    /* CARD */
     .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:16px}
-    .card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
-    .card-title{font-size:13px;font-weight:600}
+    .card-hdr{padding:15px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+    .card-title{font-size:14px;font-weight:600}
     .card-body{padding:20px}
 
-    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-    .form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+    /* FORM */
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+    .form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
     .form-group:last-child{margin-bottom:0}
     .form-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-    .form-input,.form-select,.form-textarea{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;width:100%;transition:border-color .15s}
-    .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent)}
+    .form-input,.form-select{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;width:100%;transition:border-color .15s}
+    .form-input:focus,.form-select:focus{border-color:var(--accent)}
     .form-select option{background:var(--bg2)}
-    .form-input::placeholder,.form-textarea::placeholder{color:var(--muted)}
-    .form-textarea{min-height:80px;resize:vertical}
+    .form-input::placeholder{color:var(--muted)}
+    .form-textarea{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;width:100%;transition:border-color .15s;resize:vertical;min-height:80px}
+    .form-textarea:focus{border-color:var(--accent)}
+    .form-textarea::placeholder{color:var(--muted)}
 
-    .map-wrapper{height:400px;position:relative;margin-bottom:8px}
-
-    #map{height:100%;width:100%;border-radius:8px;margin-bottom:0;border:1px solid var(--border)}
-    #resources-map{height:100%;width:100%;border-radius:8px;margin-bottom:0;border:1px solid var(--border);min-height:400px;} /* ✅ ADDED MIN-HEIGHT */
-
-    .map-hint{font-size:11px;color:var(--muted);text-align:center;margin-bottom:12px}
+    /* MAP IN FORM */
+    #report-map{height:200px;border-radius:8px;margin-bottom:10px;border:1px solid var(--border)}
+    .map-hint{font-size:12px;color:var(--muted);text-align:center;margin-bottom:10px}
     .coord-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end}
-    .loc-btn{background:var(--info);border:none;border-radius:8px;padding:10px 12px;color:#fff;font-family:var(--font);font-size:12px;cursor:pointer;white-space:nowrap;transition:.15s}
+    .loc-btn{background:var(--info);border:none;border-radius:8px;padding:10px 13px;color:#fff;font-family:var(--font);font-size:12px;cursor:pointer;white-space:nowrap}
     .loc-btn:hover{opacity:.85}
 
-    .submit-btn{width:100%;background:var(--accent);border:none;border-radius:10px;padding:13px;color:#fff;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:.15s;margin-top:4px}
+    /* BUTTONS */
+    .submit-btn{width:100%;background:var(--accent);border:none;border-radius:10px;padding:13px;color:#fff;font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;transition:.15s;margin-top:4px}
     .submit-btn:hover{opacity:.9}
-    .submit-btn:active{transform:scale(.99)}
+    .verify-btn{width:100%;background:var(--info);border:none;border-radius:10px;padding:12px;color:#fff;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
+    .verify-btn:hover{opacity:.9}
+    .verify-btn:disabled{opacity:.5;cursor:not-allowed}
 
-    .success-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:16px;text-align:center}
-    .success-header{background:linear-gradient(135deg,#1aaa72,#0a7a52);padding:28px 20px}
-    .success-icon{font-size:36px;margin-bottom:8px}
-    .success-title{font-size:16px;font-weight:600;color:#fff;margin-bottom:4px}
-    .success-sub{font-size:12px;color:rgba(255,255,255,.75)}
+    /* ALERT */
+    .alert{border-radius:8px;padding:11px 14px;font-size:13px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+    .alert-error{background:rgba(229,57,53,.1);border:1px solid rgba(229,57,53,.3);color:var(--accent)}
+    .alert-success{background:rgba(26,170,114,.1);border:1px solid rgba(26,170,114,.3);color:var(--success)}
+
+    /* SUCCESS STATE */
+    .success-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:16px}
+    .success-hdr{background:var(--success);padding:28px 24px;text-align:center}
+    .success-icon{font-size:40px;margin-bottom:8px}
+    .success-title{font-size:17px;font-weight:600;color:#fff;margin-bottom:4px}
+    .success-sub{font-size:13px;color:rgba(255,255,255,.8)}
     .success-body{padding:24px}
-    .tracking-id-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px}
-    .tracking-id-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-    .tracking-id-val{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--accent);letter-spacing:2px}
-    .status-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px}
-    .status-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
-    .status-pill{display:inline-block;padding:6px 18px;border-radius:20px;font-size:13px;font-weight:600}
+    .tid-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;text-align:center}
+    .tid-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+    .tid-val{font-family:var(--mono);font-size:24px;font-weight:500;color:var(--accent);letter-spacing:3px}
+    .tid-sub{font-size:12px;color:var(--muted);margin-top:4px}
+    .status-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;text-align:center}
+    .status-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+    .status-pill{display:inline-block;padding:6px 20px;border-radius:20px;font-size:13px;font-weight:600}
     .status-pill.active{background:rgba(229,57,53,.15);color:var(--accent)}
     .status-pill.resolved{background:rgba(26,170,114,.15);color:var(--success)}
-    .status-pill.priority{background:rgba(244,166,35,.15);color:var(--warning);font-size:11px;padding:4px 12px}
-    .ws-live{font-size:11px;color:var(--success);margin-top:8px;animation:pulse 2s infinite}
+    .ws-live{font-size:12px;color:var(--success);margin-top:8px;animation:pulse 2s infinite}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-    .another-btn{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 20px;color:var(--text);font-family:var(--font);font-size:13px;cursor:pointer;transition:.15s}
+    .another-btn{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 20px;color:var(--text);font-family:var(--font);font-size:13px;cursor:pointer;width:100%}
     .another-btn:hover{background:var(--border)}
 
-    .track-row{display:flex;gap:8px}
-    .track-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;transition:border-color .15s}
-    .track-input:focus{border-color:var(--info)}
-    .track-input::placeholder{color:var(--muted);font-family:var(--font)}
-    .track-btn{background:var(--info);border:none;border-radius:8px;padding:10px 16px;color:#fff;font-family:var(--font);font-size:13px;cursor:pointer;transition:.15s}
-    .track-btn:hover{opacity:.85}
-    #track-result{margin-top:12px}
-    .track-found{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px}
-    .track-found-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px}
-    .track-type{font-size:13px;font-weight:600}
-    .track-loc{font-size:12px;color:var(--muted);margin-bottom:4px}
-    .track-id{font-family:var(--mono);font-size:11px;color:var(--muted)}
-    .track-err{background:rgba(229,57,53,.08);border:1px solid rgba(229,57,53,.2);border-radius:8px;padding:12px;color:var(--accent);font-size:12px;text-align:center}
+    /* VERIFIED REPORT CARD */
+    .verified-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-top:16px}
+    .verified-hdr{background:var(--info);padding:16px 20px;display:flex;align-items:center;gap:10px}
+    .verified-hdr-title{font-size:15px;font-weight:600;color:#fff}
+    .verified-hdr-sub{font-size:12px;color:rgba(255,255,255,.8)}
+    .verified-body{padding:20px}
+    .vfield{margin-bottom:12px}
+    .vfield-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+    .vfield-val{font-size:14px;font-weight:500}
+    .vfield-mono{font-family:var(--mono);font-size:13px;color:var(--accent)}
+    .priority-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;text-transform:uppercase}
+    .pb-high{background:rgba(229,57,53,.15);color:var(--high)}
+    .pb-medium{background:rgba(244,166,35,.15);color:var(--medium)}
+    .pb-low{background:rgba(26,170,114,.15);color:var(--low)}
 
-    .resources-container{display:flex;flex-direction:column;height:100vh;background:var(--bg)}
-    .resources-header{padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
-    .resources-filters{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-    .filter-btn{padding:6px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;cursor:pointer;font-family:var(--font);transition:.15s}
-    .filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-
-    .resources-map-wrap{flex:1;position:relative;overflow:hidden;border-bottom:1px solid var(--border);height:400px;} /* ✅ ADDED HEIGHT */
-
-    .resources-nearest{flex-shrink:0;max-height:200px;overflow-y:auto;padding:12px;background:var(--bg3);border-top:1px solid var(--border)}
-    .nearest-title{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
-    .nearest-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;cursor:pointer;transition:.15s}
-    .nearest-card:hover{background:var(--border);border-color:var(--accent)}
-    .nearest-card:last-child{margin-bottom:0}
-    .nearest-name{font-size:13px;font-weight:600;margin-bottom:3px}
-    .nearest-dist{font-size:11px;color:var(--success);margin-bottom:3px}
-    .nearest-phone{font-size:11px;color:var(--muted)}
-
-    .tab-content{display:none}
-    .tab-content.active{display:block}
-
-    .report-layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-    @media(max-width:900px){.report-layout{grid-template-columns:1fr}}
+    /* RESOURCES VIEW */
+    .res-toolbar{padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex-shrink:0}
+    .res-legend{display:flex;gap:14px;flex:1;flex-wrap:wrap}
+    .legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+    .legend-sq{width:12px;height:12px;border-radius:3px}
+    .res-filter-btns{display:flex;gap:6px}
+    .r-btn{padding:5px 13px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--font);font-size:12px;cursor:pointer;transition:.15s}
+    .r-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+    .r-btn:hover:not(.active){border-color:var(--border2);color:var(--text)}
+    #res-map{flex:1}
+    .nearest-panel{background:var(--bg2);border-top:1px solid var(--border);padding:14px 16px;max-height:220px;overflow-y:auto;flex-shrink:0}
+    .nearest-title{font-size:13px;font-weight:600;margin-bottom:10px}
+    .nearest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+    .nearest-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;transition:.15s}
+    .nearest-card:hover{border-color:var(--border2);transform:translateY(-1px)}
+    .nearest-name{font-size:12px;font-weight:600;margin-bottom:3px}
+    .nearest-dist{font-size:11px;color:var(--muted)}
+    .nearest-type-badge{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500;margin-top:5px;display:inline-block}
+    .nb-hospital{background:rgba(233,30,99,.15);color:#e91e63}
+    .nb-fire{background:rgba(255,87,34,.15);color:#ff5722}
+    .nb-police{background:rgba(21,101,192,.15);color:#1565c0}
 
     ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
   </style>
 </head>
 <body>
 
-<nav class="top-nav">
+<nav class="topnav">
   <div class="nav-logo">
     <div class="nav-logo-icon">🚨</div>
     <div class="nav-logo-name">EMERGEX</div>
   </div>
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="switchTab('report',this)">🆘 Report</div>
+    <div class="nav-tab" onclick="switchTab('track',this)">🔎 Track</div>
+    <div class="nav-tab" onclick="switchTab('resources',this)">🏥 Resources</div>
+  </div>
   <div class="nav-spacer"></div>
-  <button class="nav-btn" onclick="toggleTheme()" id="theme-btn">☀️ Light mode</button>
-  <button class="nav-btn nav-admin" onclick="location.href='/'">Admin →</button>
+  <button class="nav-btn" onclick="toggleTheme()" id="theme-btn">☀️ Light</button>
 </nav>
 
-<div class="page-wrap">
-  <div class="tab-nav">
-    <button class="tab-btn active" onclick="switchTab('report')">📋 Report</button>
-    <button class="tab-btn" onclick="switchTab('track')">🔎 Track</button>
-    <button class="tab-btn" onclick="switchTab('resources')">📍 Resources</button>
+<!-- ── TAB: REPORT ── -->
+<div class="view active" id="tab-report">
+  <div class="hero">
+    <div class="hero-icon">🆘</div>
+    <div class="hero-title">Report an Emergency</div>
+    <div class="hero-sub">Your report goes directly to emergency responders in real-time</div>
   </div>
 
-  <div id="report" class="tab-content active">
-    <div class="hero">
-      <div class="hero-icon">🆘</div>
-      <div class="hero-title">Report an Emergency</div>
-      <div class="hero-sub">Your report goes directly to emergency responders in real-time</div>
-    </div>
-
-    <div class="card" id="report-card">
-      <div class="card-header">
-        <span>📋</span>
-        <div class="card-title">Emergency Details</div>
+  <div class="card" id="report-form-card">
+    <div class="card-hdr"><span>📋</span><div class="card-title">Emergency Details</div></div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:0">
+          <div class="form-label">Your name *</div>
+          <input id="r-name" class="form-input" placeholder="Full name"/>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <div class="form-label">Phone number *</div>
+          <input id="r-phone" class="form-input" placeholder="+91 XXXXX XXXXX" type="tel"/>
+        </div>
       </div>
-      <div class="card-body">
-        <div class="report-layout">
-          <div>
-            <div class="form-group">
-              <div class="form-label">Your name *</div>
-              <input id="r-name" class="form-input" placeholder="Full name"/>
-            </div>
-            <div class="form-group">
-              <div class="form-label">Phone number *</div>
-              <input id="r-phone" class="form-input" placeholder="+91 XXXXX XXXXX" type="tel"/>
-            </div>
-            <div class="form-group">
-              <div class="form-label">Emergency type *</div>
-              <select id="r-type" class="form-select">
-                <option value="">— Select type —</option>
-                <option value="FIRE">🔥 Fire</option>
-                <option value="MEDICAL">🏥 Medical</option>
-                <option value="POLICE">🚔 Police</option>
-                <option value="ACCIDENT">🚗 Accident</option>
-                <option value="FLOOD">🌊 Flood</option>
-                <option value="OTHER">⚠️ Other</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <div class="form-group">
-              <div class="form-label">Location description *</div>
-              <input id="r-loc" class="form-input" placeholder="e.g. Near DB Mall, Bhopal"/>
-            </div>
-            <div class="form-group">
-              <div class="form-label">Description *</div>
-              <textarea id="r-desc" class="form-textarea" placeholder="Describe the emergency situation..."></textarea>
-            </div>
-          </div>
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:0">
+          <div class="form-label">Emergency type *</div>
+          <select id="r-type" class="form-select">
+            <option value="">— Select type —</option>
+            <option value="FIRE">🔥 Fire</option>
+            <option value="MEDICAL">🏥 Medical</option>
+            <option value="POLICE">🚔 Police / Crime</option>
+            <option value="ACCIDENT">🚗 Accident</option>
+            <option value="FLOOD">🌊 Flood</option>
+            <option value="OTHER">⚠️ Other</option>
+          </select>
         </div>
-
-        <div class="form-group">
-          <div class="form-label">Pin on map <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(tap to mark)</span></div>
-          <div class="map-wrapper">
-            <div id="map"></div>
-          </div>
-          <div class="map-hint">or use your current location</div>
-          <div class="coord-row">
-            <input id="r-lat" class="form-input" placeholder="Latitude" type="number" step="any" readonly/>
-            <input id="r-lng" class="form-input" placeholder="Longitude" type="number" step="any" readonly/>
-            <button class="loc-btn" onclick="useMyLocation()">📡 My Location</button>
-          </div>
+        <div class="form-group" style="margin-bottom:0">
+          <div class="form-label">Location description *</div>
+          <input id="r-loc" class="form-input" placeholder="e.g. Near DB Mall"/>
         </div>
-
-        <div class="card" style="margin:16px -20px 0;border-top:1px solid var(--border);border-left:none;border-right:none;border-bottom:none;border-radius:0;padding:16px 0;background:transparent;border:none">
-          <div class="card-title" style="margin-bottom:12px">6 Nearest Resources</div>
-          <div id="report-nearest" style="display:grid;gap:8px"></div>
-        </div>
-
-        <button class="submit-btn" onclick="submitReport()">🚨 Report Emergency</button>
       </div>
-    </div>
-
-    <div class="success-card" id="success-card" style="display:none">
-      <div class="success-header">
-        <div class="success-icon">✅</div>
-        <div class="success-title">Emergency Reported!</div>
-        <div class="success-sub">Responders have been notified</div>
+      <div class="form-group">
+        <div class="form-label">Describe the situation</div>
+        <textarea id="r-desc" class="form-textarea" placeholder="Briefly describe what's happening..."></textarea>
       </div>
-      <div class="success-body">
-        <div class="tracking-id-box">
-          <div class="tracking-id-label">Your tracking ID</div>
-          <div class="tracking-id-val" id="disp-tracking">—</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:6px">Save this to track your emergency</div>
+      <div class="form-group">
+        <div class="form-label">Pin your location <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;font-size:11px">(tap map to mark)</span></div>
+        <div id="report-map"></div>
+        <div class="map-hint">or use GPS</div>
+        <div class="coord-row">
+          <input id="r-lat" class="form-input" placeholder="Latitude" type="number" step="any" readonly/>
+          <input id="r-lng" class="form-input" placeholder="Longitude" type="number" step="any" readonly/>
+          <button class="loc-btn" onclick="useMyLocation()">📡 GPS</button>
         </div>
-        <div class="status-box">
-          <div class="status-label">Current status</div>
-          <div><span class="status-pill active" id="disp-status">🔴 ACTIVE</span></div>
-          <div class="ws-live" id="ws-live-msg">⚡ Listening for updates...</div>
-        </div>
-        <button class="another-btn" onclick="reportAnother()">+ Report another emergency</button>
       </div>
+      <button class="submit-btn" onclick="submitReport()">🚨 Report Emergency</button>
     </div>
   </div>
 
-  <div id="track" class="tab-content">
-    <div class="hero">
-      <div class="hero-icon">🔎</div>
-      <div class="hero-title">Track Emergency</div>
-      <div class="hero-sub">Enter your tracking ID to monitor progress</div>
+  <!-- SUCCESS STATE -->
+  <div class="success-card" id="success-card" style="display:none">
+    <div class="success-hdr">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Emergency Reported!</div>
+      <div class="success-sub">Responders have been notified immediately</div>
     </div>
+    <div class="success-body">
+      <div class="tid-box">
+        <div class="tid-label">Your tracking ID</div>
+        <div class="tid-val" id="disp-tid">—</div>
+        <div class="tid-sub">Use this + your name & phone to track your case</div>
+      </div>
+      <div class="status-box">
+        <div class="status-label">Current status</div>
+        <div><span class="status-pill active" id="disp-status">🔴 REPORTED</span></div>
+        <div class="ws-live" id="ws-live-msg">⚡ Listening for updates...</div>
+      </div>
+      <button class="another-btn" onclick="reportAnother()">+ Report another emergency</button>
+    </div>
+  </div>
+</div>
 
-    <div class="card">
-      <div class="card-header">
-        <span>🔎</span>
-        <div class="card-title">Track by ID</div>
+<!-- ── TAB: TRACK ── -->
+<div class="view" id="tab-track">
+  <div class="hero">
+    <div class="hero-icon">🔎</div>
+    <div class="hero-title">Track your Emergency</div>
+    <div class="hero-sub">Enter your tracking ID along with the name and phone you used when reporting</div>
+  </div>
+
+  <!-- VERIFY FORM -->
+  <div class="card" id="verify-form-card">
+    <div class="card-hdr"><span>🔐</span><div class="card-title">Verify Your Identity</div></div>
+    <div class="card-body">
+      <div class="form-group">
+        <div class="form-label">Tracking ID *</div>
+        <input id="v-tid" class="form-input" placeholder="e.g. TRK-A3F9X2" style="font-family:var(--mono);letter-spacing:1px"/>
       </div>
-      <div class="card-body">
-        <div class="track-row">
-          <input class="track-input" id="track-input" placeholder="e.g. TRK-A3F9X2"/>
-          <button class="track-btn" onclick="trackById()">Track</button>
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:0">
+          <div class="form-label">Your name *</div>
+          <input id="v-name" class="form-input" placeholder="Full name (as reported)"/>
         </div>
-        <div id="track-result"></div>
+        <div class="form-group" style="margin-bottom:0">
+          <div class="form-label">Phone number *</div>
+          <input id="v-phone" class="form-input" placeholder="+91 XXXXX XXXXX" type="tel"/>
+        </div>
       </div>
+      <div id="verify-alert" style="display:none;margin-top:14px"></div>
+      <button class="verify-btn" id="verify-btn" onclick="verifyAndTrack()" style="margin-top:14px">🔍 Verify & Track</button>
+      <p style="font-size:12px;color:var(--muted);margin-top:10px;text-align:center">
+        Your name and phone must match what you provided when reporting
+      </p>
     </div>
   </div>
 
-  <div id="resources" class="tab-content">
-    <div class="hero">
-      <div class="hero-icon">📍</div>
-      <div class="hero-title">Find Resources</div>
-      <div class="hero-sub">Locate hospitals, fire stations, and police in Bhopal</div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <span>📍</span>
-        <div class="card-title">Filter Resources</div>
-      </div>
-      <div class="card-body">
-        <div class="resources-filters" id="resource-filters">
-          <button class="filter-btn active" onclick="filterResources('ALL')">All (14)</button>
-          <button class="filter-btn" onclick="filterResources('HOSPITAL')">🏥 Hospitals (5)</button>
-          <button class="filter-btn" onclick="filterResources('FIRE')">🚒 Fire (4)</button>
-          <button class="filter-btn" onclick="filterResources('POLICE')">🚔 Police (5)</button>
+  <!-- VERIFIED RESULT -->
+  <div id="verified-result" style="display:none">
+    <div class="verified-card">
+      <div class="verified-hdr">
+        <span style="font-size:22px">✅</span>
+        <div>
+          <div class="verified-hdr-title">Identity Verified</div>
+          <div class="verified-hdr-sub">Here are your emergency details</div>
         </div>
-        <button class="loc-btn" style="width:100%;margin-top:12px" onclick="showNearestResources()">📡 My Location</button>
       </div>
-    </div>
-
-    <div class="card" style="display:flex;flex-direction:column;min-height:500px;padding:0;border-radius:0">
-      <div class="resources-map-wrap">
-        <div id="resources-map"></div>
-      </div>
-      <div class="resources-nearest">
-        <div class="nearest-title">Nearest Resources</div>
-        <div id="nearest-list">Tap "My Location" to find nearby resources</div>
+      <div class="verified-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+          <div class="vfield">
+            <div class="vfield-label">Type</div>
+            <div class="vfield-val" id="vr-type">—</div>
+          </div>
+          <div class="vfield">
+            <div class="vfield-label">Priority</div>
+            <div id="vr-priority">—</div>
+          </div>
+          <div class="vfield">
+            <div class="vfield-label">Status</div>
+            <div id="vr-status">—</div>
+          </div>
+          <div class="vfield">
+            <div class="vfield-label">Tracking ID</div>
+            <div class="vfield-val vfield-mono" id="vr-tid">—</div>
+          </div>
+        </div>
+        <div class="vfield">
+          <div class="vfield-label">Location</div>
+          <div class="vfield-val" id="vr-loc">—</div>
+        </div>
+        <div class="status-box" style="margin-top:14px">
+          <div class="status-label">Live status</div>
+          <div><span class="status-pill active" id="vr-live-status">🔴 REPORTED</span></div>
+          <div class="ws-live" id="vr-ws-msg">⚡ Listening for real-time updates...</div>
+        </div>
+        <button class="another-btn" onclick="resetTrack()" style="margin-top:4px">← Track another</button>
       </div>
     </div>
   </div>
+</div>
 
+<!-- ── TAB: RESOURCES ── -->
+<div class="view-map" id="tab-resources">
+  <div class="res-toolbar">
+    <div class="res-legend">
+      <span class="legend-item"><span class="legend-sq" style="background:#e91e63"></span>Hospitals</span>
+      <span class="legend-item"><span class="legend-sq" style="background:#ff5722"></span>Fire Stations</span>
+      <span class="legend-item"><span class="legend-sq" style="background:#1565c0"></span>Police Stations</span>
+      <span class="legend-item"><span class="legend-sq" style="background:#9c27b0"></span>You</span>
+    </div>
+    <div class="res-filter-btns">
+      <button class="r-btn active" onclick="filterResources('all',this)">All</button>
+      <button class="r-btn" onclick="filterResources('hospital',this)">🏥 Hospitals</button>
+      <button class="r-btn" onclick="filterResources('fire',this)">🚒 Fire</button>
+      <button class="r-btn" onclick="filterResources('police',this)">🚔 Police</button>
+      <button class="r-btn" onclick="myLocationOnResMap()" style="background:rgba(156,39,176,.15);border-color:rgba(156,39,176,.4);color:#9c27b0">📡 My Location</button>
+    </div>
+  </div>
+  <div id="res-map"></div>
+  <div class="nearest-panel">
+    <div class="nearest-title">📍 Nearest Resources</div>
+    <div class="nearest-grid" id="nearest-grid">
+      <div style="color:var(--muted);font-size:13px">Click "📡 My Location" to see nearest resources</div>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 <script>
-  const RESOURCES = [
-    { id: 1, name: 'Hamidia Hospital', type: 'HOSPITAL', lat: 23.1815, lng: 77.4104, phone: '+91 755 2761102' },
-    { id: 2, name: 'Bhopal Hospital', type: 'HOSPITAL', lat: 23.1957, lng: 77.3980, phone: '+91 755 2740000' },
-    { id: 3, name: 'Aravali Hospital', type: 'HOSPITAL', lat: 23.2300, lng: 77.4600, phone: '+91 755 2700900' },
-    { id: 4, name: 'Chirayu Hospital', type: 'HOSPITAL', lat: 23.2150, lng: 77.4250, phone: '+91 755 4044444' },
-    { id: 5, name: 'Narmada Hospital', type: 'HOSPITAL', lat: 23.1700, lng: 77.3850, phone: '+91 755 2765900' },
-    { id: 6, name: 'Fire Station Central', type: 'FIRE', lat: 23.1900, lng: 77.4000, phone: '+91 755 2550001' },
-    { id: 7, name: 'Fire Station South', type: 'FIRE', lat: 23.1500, lng: 77.3900, phone: '+91 755 2550002' },
-    { id: 8, name: 'Fire Station East', type: 'FIRE', lat: 23.2200, lng: 77.4300, phone: '+91 755 2550003' },
-    { id: 9, name: 'Fire Station West', type: 'FIRE', lat: 23.2000, lng: 77.3700, phone: '+91 755 2550004' },
-    { id: 10, name: 'Police HQ', type: 'POLICE', lat: 23.1850, lng: 77.4150, phone: '+91 755 2550000' },
-    { id: 11, name: 'Police Station TT Nagar', type: 'POLICE', lat: 23.1950, lng: 77.4200, phone: '+91 755 2550010' },
-    { id: 12, name: 'Police Station Baijnath', type: 'POLICE', lat: 23.1650, lng: 77.3950, phone: '+91 755 2550020' },
-    { id: 13, name: 'Police Station Arera', type: 'POLICE', lat: 23.2300, lng: 77.4400, phone: '+91 755 2550030' },
-    { id: 14, name: 'Police Station Misrod', type: 'POLICE', lat: 23.1400, lng: 77.4000, phone: '+91 755 2550040' }
-  ];
 
-  let map = null, reportMap = null, resourceMap = null, pins = {}, currentFilter = 'ALL';
-  let stomp = null, trackSub = null;
+// ── RESOURCES ─────────────────────────────────────────
+const RESOURCES=[
+  {name:'AIIMS Bhopal',type:'hospital',lat:23.2599,lng:77.4664,phone:'0755-2672335'},
+  {name:'Hamidia Hospital',type:'hospital',lat:23.2584,lng:77.4011,phone:'0755-2540222'},
+  {name:'Bansal Hospital',type:'hospital',lat:23.2450,lng:77.4264,phone:'0755-4066000'},
+  {name:'Apollo Sage Hospital',type:'hospital',lat:23.1956,lng:77.4390,phone:'0755-6703000'},
+  {name:'Chirayu Medical College',type:'hospital',lat:23.2990,lng:77.4980,phone:'0755-6677000'},
+  {name:'MP Nagar Fire Station',type:'fire',lat:23.2338,lng:77.4340,phone:'101'},
+  {name:'TT Nagar Fire Station',type:'fire',lat:23.2450,lng:77.3980,phone:'101'},
+  {name:'Govindpura Fire Station',type:'fire',lat:23.2680,lng:77.4780,phone:'101'},
+  {name:'Misrod Fire Station',type:'fire',lat:23.1980,lng:77.4640,phone:'101'},
+  {name:'MP Nagar Police',type:'police',lat:23.2320,lng:77.4310,phone:'100'},
+  {name:'TT Nagar Police',type:'police',lat:23.2430,lng:77.3960,phone:'100'},
+  {name:'Habibganj Police',type:'police',lat:23.2290,lng:77.4590,phone:'100'},
+  {name:'Shahpura Police',type:'police',lat:23.2075,lng:77.4570,phone:'100'},
+  {name:'Ayodhya Bypass Police',type:'police',lat:23.2780,lng:77.4890,phone:'100'},
+];
+const RES_COLORS={hospital:'#e91e63',fire:'#ff5722',police:'#1565c0'};
+const RES_EMOJI={hospital:'🏥',fire:'🚒',police:'🚔'};
 
-  function toggleTheme() {
-    const d = document.documentElement, l = d.getAttribute('data-theme') === 'dark';
-    d.setAttribute('data-theme', l ? 'light' : 'dark');
-    document.getElementById('theme-btn').textContent = l ? '🌙 Dark mode' : '☀️ Light mode';
-  }
+function resIcon(r,highlight=false){
+  const size=highlight?36:28;
+  return L.divIcon({className:'',
+    html:`<div style="background:${RES_COLORS[r.type]};width:${size}px;height:${size}px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:${highlight?18:14}px;border:${highlight?'3px':'2px'} solid rgba(255,255,255,.9);box-shadow:0 2px ${highlight?12:6}px rgba(0,0,0,.4)">${RES_EMOJI[r.type]}</div>`,
+    iconSize:[size,size],iconAnchor:[size/2,size/2],popupAnchor:[0,-size/2+4]});
+}
 
-  function switchTab(tabName) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-    document.getElementById(tabName).classList.add('active');
-    if (event) event.target.classList.add('active');
+// ── THEME ─────────────────────────────────────────────
+function toggleTheme(){
+  const d=document.documentElement,l=d.getAttribute('data-theme')==='dark';
+  d.setAttribute('data-theme',l?'light':'dark');
+  document.getElementById('theme-btn').textContent=l?'🌙 Dark':'☀️ Light';
+}
 
-    setTimeout(() => {
-      if (tabName === 'report') {
-        if (reportMap === null) initReportMap();
-        else reportMap.invalidateSize();
-      }
-      if (tabName === 'resources') {
-        if (resourceMap === null) initResourcesMap();
-        else resourceMap.invalidateSize();
-      }
-    }, 100);
-  }
+// ── TAB SWITCHER ──────────────────────────────────────
+function switchTab(tab,el){
+  document.querySelectorAll('.view,.view-map').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  el.classList.add('active');
+  if(tab==='resources')setTimeout(()=>resMap.invalidateSize(),50);
+}
 
-  function initReportMap() {
-    reportMap = L.map('map').setView([23.2599, 77.4126], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 19 }).addTo(reportMap);
-    let reportPin = null;
-    reportMap.on('click', e => {
-      document.getElementById('r-lat').value = e.latlng.lat.toFixed(6);
-      document.getElementById('r-lng').value = e.latlng.lng.toFixed(6);
-      if (reportPin) reportMap.removeLayer(reportPin);
-      reportPin = L.marker([e.latlng.lat, e.latlng.lng]).addTo(reportMap).bindPopup('📍 Emergency location').openPopup();
-      updateReportNearest();
-    });
-  }
+// ── REPORT MAP ────────────────────────────────────────
+const reportMap=L.map('report-map').setView([23.2599,77.4126],12);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(reportMap);
+let reportPin=null;
+reportMap.on('click',e=>{
+  document.getElementById('r-lat').value=e.latlng.lat.toFixed(6);
+  document.getElementById('r-lng').value=e.latlng.lng.toFixed(6);
+  if(reportPin)reportMap.removeLayer(reportPin);
+  reportPin=L.marker([e.latlng.lat,e.latlng.lng]).addTo(reportMap).bindPopup('📍 Emergency location').openPopup();
+});
 
-  function initResourcesMap() {
-    resourceMap = L.map('resources-map').setView([23.2599, 77.4126], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap',
-        maxZoom: 19
-    }).addTo(resourceMap);
-
-    renderResources();
-
-    // 🔥 CRITICAL FIX
-    setTimeout(() => {
-      resourceMap.invalidateSize();
-    }, 300);
-  }
-
-  function useMyLocation() {
-    if (!navigator.geolocation) return alert('Geolocation not supported');
-    navigator.geolocation.getCurrentPosition(pos => {
-      const la = pos.coords.latitude, ln = pos.coords.longitude;
-      document.getElementById('r-lat').value = la.toFixed(6);
-      document.getElementById('r-lng').value = ln.toFixed(6);
-      reportMap.flyTo([la, ln], 15);
-      let reportPin = L.marker([la, ln]).addTo(reportMap).bindPopup('📍 Your location').openPopup();
-      updateReportNearest();
-    });
-  }
-
-  function showNearestResources() {
-    if (!navigator.geolocation) return alert('Geolocation not supported');
-    navigator.geolocation.getCurrentPosition(pos => {
-      const la = pos.coords.latitude, ln = pos.coords.longitude;
-      resourceMap.flyTo([la, ln], 15);
-      displayNearestResources(la, ln);
-    });
-  }
-
-  function renderResources() {
-    Object.keys(pins).forEach(id => resourceMap.removeLayer(pins[id]));
-    pins = {};
-    const filtered = currentFilter === 'ALL' ? RESOURCES : RESOURCES.filter(r => r.type === currentFilter);
-    filtered.forEach(r => {
-      const icon = { 'HOSPITAL': '🏥', 'FIRE': '🚒', 'POLICE': '🚔' }[r.type];
-      const marker = L.marker([r.lat, r.lng], { title: r.name }).bindPopup(`<b>${icon} ${r.name}</b><br>📞 ${r.phone}`).addTo(resourceMap);
-      pins[r.id] = marker;
-    });
-  }
-
-  function filterResources(type) {
-    currentFilter = type;
-    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-    renderResources();
-  }
-
-  function displayNearestResources(userLat, userLng) {
-    const distances = RESOURCES.map(r => ({
-      ...r,
-      distance: Math.sqrt(Math.pow(r.lat - userLat, 2) + Math.pow(r.lng - userLng, 2)) * 111
-    })).sort((a, b) => a.distance - b.distance).slice(0, 6);
-
-    const list = document.getElementById('nearest-list');
-    list.innerHTML = distances.map(r => `
-      <div class="nearest-card" onclick="flyToResource(${r.lat}, ${r.lng})">
-        <div class="nearest-name">${r.name}</div>
-        <div class="nearest-dist">📍 ${r.distance.toFixed(1)} km</div>
-        <div class="nearest-phone">📞 ${r.phone}</div>
-      </div>
-    `).join('');
-  }
-
-  function flyToResource(lat, lng) {
-    resourceMap.flyTo([lat, lng], 16);
-  }
-
-  function updateReportNearest() {
-    const lat = parseFloat(document.getElementById('r-lat').value);
-    const lng = parseFloat(document.getElementById('r-lng').value);
-    if (isNaN(lat) || isNaN(lng)) return;
-
-    const distances = RESOURCES.map(r => ({
-      ...r,
-      distance: Math.sqrt(Math.pow(r.lat - lat, 2) + Math.pow(r.lng - lng, 2)) * 111
-    })).sort((a, b) => a.distance - b.distance).slice(0, 6);
-
-    const container = document.getElementById('report-nearest');
-    container.innerHTML = distances.map(r => `
-      <div class="nearest-card">
-        <div class="nearest-name">${r.name}</div>
-        <div class="nearest-dist">📍 ${r.distance.toFixed(1)} km</div>
-        <div class="nearest-phone">📞 ${r.phone}</div>
-      </div>
-    `).join('');
-  }
-
-  function connectWS(trackingId) {
-    if (stomp && stomp.connected) { subscribeTracking(trackingId); return; }
-    const s = new SockJS('/ws');
-    stomp = Stomp.over(s); stomp.debug = null;
-    stomp.connect({}, () => subscribeTracking(trackingId));
-  }
-
-  function subscribeTracking(trackingId) {
-    if (trackSub) trackSub.unsubscribe();
-    trackSub = stomp.subscribe(`/topic/track/${trackingId}`, msg => {
-      const e = JSON.parse(msg.body);
-      updateStatus(e.status, e.priority);
-    });
-  }
-
-  function updateStatus(status, priority = null) {
-    const pill = document.getElementById('disp-status');
-    const msg = document.getElementById('ws-live-msg');
-    let content = status === 'RESOLVED' ? '✅ RESOLVED' : '🔴 ACTIVE';
-    if (priority) content += ` <span class="status-pill priority">${priority}</span>`;
-    if (status === 'RESOLVED') {
-      pill.className = 'status-pill resolved';
-      pill.innerHTML = content;
-      msg.textContent = 'Your emergency has been resolved!';
-      msg.style.animation = 'none';
-      msg.style.color = 'var(--success)';
-    } else {
-      pill.className = 'status-pill active';
-      pill.innerHTML = content;
-    }
-  }
-
-  function submitReport() {
-    const name = document.getElementById('r-name').value.trim();
-    const phone = document.getElementById('r-phone').value.trim();
-    const type = document.getElementById('r-type').value;
-    const loc = document.getElementById('r-loc').value.trim();
-    const desc = document.getElementById('r-desc').value.trim();
-    const lat = parseFloat(document.getElementById('r-lat').value);
-    const lng = parseFloat(document.getElementById('r-lng').value);
-    if (!name || !phone || !type || !loc || !desc) { alert('Please fill in all required fields.'); return; }
-    fetch('/api/emergencies', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reporterName: name, reporterPhone: phone, type, location: loc, description: desc, status: 'ACTIVE', latitude: isNaN(lat) ? null : lat, longitude: isNaN(lng) ? null : lng })
-    })
-      .then(r => r.json()).then(saved => {
-        document.getElementById('report-card').style.display = 'none';
-        document.getElementById('success-card').style.display = 'block';
-        document.getElementById('disp-tracking').textContent = saved.trackingId;
-        updateStatus(saved.status);
-        connectWS(saved.trackingId);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }).catch(() => alert('Failed to submit. Please try again.'));
-  }
-
-  function reportAnother() {
-    document.getElementById('report-card').style.display = 'block';
-    document.getElementById('success-card').style.display = 'none';
-    ['r-name', 'r-lat', 'r-lng'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('r-phone').value = '';
-    document.getElementById('r-loc').value = '';
-    document.getElementById('r-desc').value = '';
-    document.getElementById('r-type').value = '';
-  }
-
-  function trackById() {
-    const tid = document.getElementById('track-input').value.trim().toUpperCase();
-    const res = document.getElementById('track-result');
-    if (!tid) return;
-    fetch(`/api/emergencies/track/${tid}`)
-      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .then(e => {
-        const isActive = e.status === 'ACTIVE';
-        let statusBadge = `<span class="status-pill ${isActive ? 'active' : 'resolved'}" style="font-size:11px;padding:3px 10px">${isActive ? '🔴 ACTIVE' : '✅ RESOLVED'}</span>`;
-        if (e.priority) statusBadge += ` <span class="status-pill priority">${e.priority}</span>`;
-        res.innerHTML = `<div class="track-found">
-          <div class="track-found-top">
-            <span class="track-type">${e.type}</span>
-            ${statusBadge}
-          </div>
-          <div class="track-loc">📍 ${e.location}</div>
-          ${e.reporterName ? `<div class="track-loc">👤 ${e.reporterName}</div>` : ''}
-          <div class="track-id">${e.trackingId}</div>
-        </div>`;
-        connectWS(tid);
-        if (trackSub) trackSub.unsubscribe();
-        trackSub = stomp.subscribe(`/topic/track/${tid}`, () => trackById());
-      })
-      .catch(() => { res.innerHTML = `<div class="track-err">No emergency found with ID <b>${tid}</b></div>`; });
-  }
-
-  // Initialize the first active tab on load to ensure the report map works initially
-  window.addEventListener('DOMContentLoaded', () => {
-      initReportMap();
+function useMyLocation(){
+  if(!navigator.geolocation)return alert('Geolocation not supported');
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const la=pos.coords.latitude,ln=pos.coords.longitude;
+    document.getElementById('r-lat').value=la.toFixed(6);
+    document.getElementById('r-lng').value=ln.toFixed(6);
+    reportMap.flyTo([la,ln],15);
+    if(reportPin)reportMap.removeLayer(reportPin);
+    reportPin=L.marker([la,ln]).addTo(reportMap).bindPopup('📍 Your location').openPopup();
+    userLat=la;userLng=ln;renderNearestResources();
   });
+}
+
+// ── RESOURCES MAP ─────────────────────────────────────
+const resMap=L.map('res-map').setView([23.2599,77.4126],13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(resMap);
+let resMarkers=[],userMarker=null,userLat=null,userLng=null,currentResFilter='all';
+
+function addResourceMarkers(){
+  resMarkers.forEach(m=>resMap.removeLayer(m));resMarkers=[];
+  RESOURCES.forEach(r=>{
+    if(currentResFilter!=='all'&&r.type!==currentResFilter)return;
+    const dist=userLat?haversine(userLat,userLng,r.lat,r.lng):null;
+    const m=L.marker([r.lat,r.lng],{icon:resIcon(r)})
+      .bindPopup(`<div style="font-family:'DM Sans',sans-serif"><b>${RES_EMOJI[r.type]} ${r.name}</b><br><small style="color:${RES_COLORS[r.type]}">${r.type.toUpperCase()}</small><br>📞 ${r.phone}${dist?`<br><small>📍 ${dist.toFixed(1)} km away</small>`:''}</div>`)
+      .addTo(resMap);
+    resMarkers.push(m);
+  });
+}
+addResourceMarkers();
+
+function filterResources(type,el){
+  currentResFilter=type;
+  document.querySelectorAll('.r-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');addResourceMarkers();
+}
+
+function myLocationOnResMap(){
+  if(!navigator.geolocation)return alert('Geolocation not supported');
+  navigator.geolocation.getCurrentPosition(pos=>{
+    userLat=pos.coords.latitude;userLng=pos.coords.longitude;
+    resMap.flyTo([userLat,userLng],14);
+    if(userMarker)resMap.removeLayer(userMarker);
+    const myIcon=L.divIcon({className:'',html:`<div style="background:#9c27b0;width:16px;height:16px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 8px rgba(156,39,176,.6)"></div>`,iconSize:[16,16],iconAnchor:[8,8]});
+    userMarker=L.marker([userLat,userLng],{icon:myIcon}).addTo(resMap).bindPopup('📍 You are here').openPopup();
+    addResourceMarkers();renderNearestResources();
+  });
+}
+
+function haversine(la1,ln1,la2,ln2){
+  const R=6371,dLa=(la2-la1)*Math.PI/180,dLn=(ln2-ln1)*Math.PI/180;
+  const a=Math.sin(dLa/2)**2+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dLn/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function renderNearestResources(){
+  if(!userLat||!userLng)return;
+  const withDist=RESOURCES.map(r=>({...r,dist:haversine(userLat,userLng,r.lat,r.lng)})).sort((a,b)=>a.dist-b.dist).slice(0,6);
+  document.getElementById('nearest-grid').innerHTML=withDist.map(r=>`
+    <div class="nearest-card" onclick="resMap.flyTo([${r.lat},${r.lng}],16)">
+      <div class="nearest-name">${RES_EMOJI[r.type]} ${r.name}</div>
+      <div class="nearest-dist">📍 ${r.dist.toFixed(1)} km · 📞 ${r.phone}</div>
+      <span class="nearest-type-badge nb-${r.type}">${r.type}</span>
+    </div>`).join('');
+}
+
+// ── WEBSOCKET ─────────────────────────────────────────
+let stomp=null,trackSub=null;
+
+function connectWS(trackingId,statusElId,msgElId){
+  if(stomp&&stomp.connected){subscribeTracking(trackingId,statusElId,msgElId);return}
+  const s=new SockJS('/ws');
+  stomp=Stomp.over(s);stomp.debug=null;
+  stomp.connect({},()=>subscribeTracking(trackingId,statusElId,msgElId));
+}
+
+function subscribeTracking(tid,statusElId,msgElId){
+  if(trackSub)trackSub.unsubscribe();
+  trackSub=stomp.subscribe(`/topic/track/${tid}`,msg=>{
+    const e=JSON.parse(msg.body);
+    updateStatusEl(statusElId,msgElId,e.status);
+  });
+}
+
+function updateStatusEl(statusElId,msgElId,status){
+  const pill=document.getElementById(statusElId);
+  const msg=document.getElementById(msgElId);
+  if(status==='RESOLVED'){
+    pill.className='status-pill resolved';pill.textContent='✅ RESOLVED';
+    msg.textContent='Your emergency has been resolved!';msg.style.animation='none';msg.style.color='var(--success)';
+  } else {
+    pill.className='status-pill active';pill.textContent='🔴 REPORTED';
+  }
+}
+
+// ── SUBMIT REPORT ─────────────────────────────────────
+function submitReport(){
+  const name=document.getElementById('r-name').value.trim();
+  const phone=document.getElementById('r-phone').value.trim();
+  const type=document.getElementById('r-type').value;
+  const loc=document.getElementById('r-loc').value.trim();
+  const desc=document.getElementById('r-desc').value.trim();
+  const lat=parseFloat(document.getElementById('r-lat').value);
+  const lng=parseFloat(document.getElementById('r-lng').value);
+  if(!name||!phone||!type||!loc){alert('Please fill in all required fields.');return}
+
+  fetch('/api/emergencies',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({reporterName:name,reporterPhone:phone,type,location:loc,
+      description:desc,status:'REPORTED',
+      latitude:isNaN(lat)?null:lat,longitude:isNaN(lng)?null:lng})
+  })
+  .then(r=>r.json()).then(saved=>{
+    document.getElementById('report-form-card').style.display='none';
+    document.getElementById('success-card').style.display='block';
+    document.getElementById('disp-tid').textContent=saved.trackingId;
+    updateStatusEl('disp-status','ws-live-msg',saved.status);
+    connectWS(saved.trackingId,'disp-status','ws-live-msg');
+    window.scrollTo({top:0,behavior:'smooth'});
+    if(!isNaN(lat)){userLat=lat;userLng=lng;renderNearestResources()}
+  }).catch(()=>alert('Failed to submit. Please try again.'));
+}
+
+// ── VERIFY & TRACK ────────────────────────────────────
+async function verifyAndTrack(){
+  const tid=document.getElementById('v-tid').value.trim().toUpperCase();
+  const name=document.getElementById('v-name').value.trim();
+  const phone=document.getElementById('v-phone').value.trim();
+  const alertEl=document.getElementById('verify-alert');
+  const btn=document.getElementById('verify-btn');
+
+  if(!tid||!name||!phone){
+    showVerifyAlert('Please fill in all fields.','error');return;
+  }
+
+  btn.disabled=true;btn.textContent='Verifying...';
+
+  try {
+    const res=await fetch('/api/emergencies/verify',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({trackingId:tid,reporterName:name,reporterPhone:phone})
+    });
+    const data=await res.json();
+
+    if(res.ok){
+      // ✅ Verified — show their report
+      document.getElementById('verify-form-card').style.display='none';
+      document.getElementById('verified-result').style.display='block';
+
+      const pClass=data.priority==='HIGH'?'pb-high':data.priority==='MEDIUM'?'pb-medium':'pb-low';
+      document.getElementById('vr-type').textContent=data.type;
+      document.getElementById('vr-priority').innerHTML=`<span class="priority-badge ${pClass}">${data.priority||'—'}</span>`;
+      document.getElementById('vr-tid').textContent=data.trackingId;
+      document.getElementById('vr-loc').textContent='📍 '+data.location;
+      updateStatusEl('vr-live-status','vr-ws-msg',data.status);
+
+      // Status pill separately
+      const sp=document.getElementById('vr-status');
+      sp.innerHTML=`<span class="status-pill ${data.status==='RESOLVED'?'resolved':'active'}">${data.status==='RESOLVED'?'✅ RESOLVED':'🔴 REPORTED'}</span>`;
+
+      // Connect WebSocket for live updates
+      connectWS(data.trackingId,'vr-live-status','vr-ws-msg');
+
+    } else {
+      showVerifyAlert(data.error||'Verification failed. Please check your details.','error');
+    }
+  } catch(e){
+    showVerifyAlert('Could not connect. Is the server running?','error');
+  }
+
+  btn.disabled=false;btn.textContent='🔍 Verify & Track';
+}
+
+function showVerifyAlert(msg,type){
+  const el=document.getElementById('verify-alert');
+  el.style.display='flex';
+  el.className='alert alert-'+type;
+  el.innerHTML=(type==='error'?'⚠️ ':'✅ ')+msg;
+}
+
+function resetTrack(){
+  document.getElementById('verify-form-card').style.display='block';
+  document.getElementById('verified-result').style.display='none';
+  document.getElementById('verify-alert').style.display='none';
+  ['v-tid','v-name','v-phone'].forEach(id=>document.getElementById(id).value='');
+}
+
+function reportAnother(){
+  document.getElementById('report-form-card').style.display='block';
+  document.getElementById('success-card').style.display='none';
+  ['r-name','r-phone','r-loc','r-lat','r-lng'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('r-type').value='';document.getElementById('r-desc').value='';
+  if(reportPin){reportMap.removeLayer(reportPin);reportPin=null}
+}
 </script>
 </body>
 </html>

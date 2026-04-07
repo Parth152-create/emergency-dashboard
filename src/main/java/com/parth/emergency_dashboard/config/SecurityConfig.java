@@ -7,6 +7,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -27,7 +28,6 @@ public class SecurityConfig {
     private final UserRepository userRepository;
     private final JwtFilter jwtFilter;
 
-    // ✅ @Lazy breaks the cycle — JwtFilter is created after SecurityConfig
     public SecurityConfig(UserRepository userRepository, @Lazy JwtFilter jwtFilter) {
         this.userRepository = userRepository;
         this.jwtFilter = jwtFilter;
@@ -51,7 +51,6 @@ public class SecurityConfig {
         };
     }
 
-    // ✅ DaoAuthenticationProvider — wires BCrypt + UserDetailsService correctly
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -72,14 +71,26 @@ public class SecurityConfig {
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider())
             .authorizeHttpRequests(auth -> auth
+
+                // ── PUBLIC PAGES ──────────────────────────────
                 .requestMatchers(
                     "/", "/index.html", "/login.html", "/customer.html",
                     "/css/**", "/js/**", "/images/**", "/favicon.ico",
                     "/ws/**"
                 ).permitAll()
+
+                // ── PUBLIC AUTH ───────────────────────────────
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("POST", "/api/emergencies").permitAll()
-                .requestMatchers("GET", "/api/emergencies/track/**").permitAll()
+
+                // ── PUBLIC REPORTER ENDPOINTS ─────────────────
+                // Reporter can POST new emergency (no login)
+                .requestMatchers(HttpMethod.POST, "/api/emergencies").permitAll()
+                // Reporter can track by tracking ID
+                .requestMatchers(HttpMethod.GET, "/api/emergencies/track/**").permitAll()
+                // Reporter can verify name+phone to access their report
+                .requestMatchers(HttpMethod.POST, "/api/emergencies/verify").permitAll()
+
+                // ── EVERYTHING ELSE = ADMIN ONLY (JWT) ────────
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -97,6 +108,7 @@ public class SecurityConfig {
                     "ROLE_ADMIN"
                 ));
                 System.out.println("✅ Admin seeded → username: admin | password: admin123");
+                System.out.println("⚠️  Change this password before deploying!");
             }
         };
     }
