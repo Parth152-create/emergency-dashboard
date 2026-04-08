@@ -235,6 +235,14 @@
         <div class="tid-val" id="disp-tid">—</div>
         <div class="tid-sub">Use this + your name & phone to track your case</div>
       </div>
+
+      <!-- ── AI PRIORITY BOX (hidden until response comes back) ── -->
+      <div class="status-box" id="priority-box" style="display:none">
+        <div class="status-label">🤖 AI-assigned priority</div>
+        <div id="disp-priority"></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px">Automatically classified based on your report</div>
+      </div>
+
       <div class="status-box">
         <div class="status-label">Current status</div>
         <div><span class="status-pill active" id="disp-status">🔴 REPORTED</span></div>
@@ -524,6 +532,16 @@ function submitReport(){
     document.getElementById('success-card').style.display='block';
     document.getElementById('disp-tid').textContent=saved.trackingId;
     updateStatusEl('disp-status','ws-live-msg',saved.status);
+
+    // ── AI PRIORITY BADGE ──────────────────────────────
+    const p=saved.priority||'MEDIUM';
+    const pClass=p==='HIGH'?'pb-high':p==='LOW'?'pb-low':'pb-medium';
+    const pEmoji=p==='HIGH'?'🔴':p==='LOW'?'🟢':'🟡';
+    document.getElementById('disp-priority').innerHTML=
+      `<span class="priority-badge ${pClass}">${pEmoji} ${p}</span>`;
+    document.getElementById('priority-box').style.display='block';
+    // ──────────────────────────────────────────────────
+
     connectWS(saved.trackingId,'disp-status','ws-live-msg');
     window.scrollTo({top:0,behavior:'smooth'});
     if(!isNaN(lat)){userLat=lat;userLng=lng;renderNearestResources()}
@@ -553,7 +571,6 @@ async function verifyAndTrack(){
     const data=await res.json();
 
     if(res.ok){
-      // ✅ Verified — show their report
       document.getElementById('verify-form-card').style.display='none';
       document.getElementById('verified-result').style.display='block';
 
@@ -564,11 +581,9 @@ async function verifyAndTrack(){
       document.getElementById('vr-loc').textContent='📍 '+data.location;
       updateStatusEl('vr-live-status','vr-ws-msg',data.status);
 
-      // Status pill separately
       const sp=document.getElementById('vr-status');
       sp.innerHTML=`<span class="status-pill ${data.status==='RESOLVED'?'resolved':'active'}">${data.status==='RESOLVED'?'✅ RESOLVED':'🔴 REPORTED'}</span>`;
 
-      // Connect WebSocket for live updates
       connectWS(data.trackingId,'vr-live-status','vr-ws-msg');
 
     } else {
@@ -599,7 +614,11 @@ function reportAnother(){
   document.getElementById('report-form-card').style.display='block';
   document.getElementById('success-card').style.display='none';
   ['r-name','r-phone','r-loc','r-lat','r-lng'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('r-type').value='';document.getElementById('r-desc').value='';
+  document.getElementById('r-type').value='';
+  document.getElementById('r-desc').value='';
+  // ── reset priority box ──
+  document.getElementById('priority-box').style.display='none';
+  document.getElementById('disp-priority').innerHTML='';
   if(reportPin){reportMap.removeLayer(reportPin);reportPin=null}
 }
 </script>

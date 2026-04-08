@@ -2,141 +2,82 @@ package com.parth.emergency_dashboard.controller;
 
 import com.parth.emergency_dashboard.model.Emergency;
 import com.parth.emergency_dashboard.service.EmergencyService;
-import com.parth.emergency_dashboard.service.SmsService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/emergencies")
-@CrossOrigin(origins = "*")
 public class EmergencyController {
 
-    private final EmergencyService service;
-    private final SimpMessagingTemplate messagingTemplate;
-    private final SmsService smsService;
+    private final EmergencyService emergencyService;
 
-    public EmergencyController(EmergencyService service,
-                               SimpMessagingTemplate messagingTemplate,
-                               SmsService smsService) {
-        this.service = service;
-        this.messagingTemplate = messagingTemplate;
-        this.smsService = smsService;
+    public EmergencyController(EmergencyService emergencyService) {
+        this.emergencyService = emergencyService;
     }
 
-    // ── PUBLIC: Reporter submits emergency ────────────
+    // ── PUBLIC endpoints (citizen-facing) ────────────────────────────────────
+
+    /** Submit a new emergency report. AI auto-classifies priority. */
     @PostMapping
-    public Emergency addEmergency(@RequestBody @Valid Emergency emergency) {
-        Emergency saved = service.addEmergency(emergency);
-        messagingTemplate.convertAndSend("/topic/emergencies", saved);
-        if (saved.getReporterPhone() != null && !saved.getReporterPhone().isEmpty()) {
-            smsService.sendReportConfirmation(
-                saved.getReporterPhone(), saved.getType(),
-                saved.getLocation(), saved.getTrackingId(), saved.getPriority()
-            );
-        }
-        return saved;
+    public ResponseEntity<Emergency> createEmergency(@Valid @RequestBody Emergency emergency) {
+        return ResponseEntity.ok(emergencyService.createEmergency(emergency));
     }
 
-    // ── ADMIN: Get all emergencies ────────────────────
-    @GetMapping
-    public List<Emergency> getAll() {
-        return service.getAllEmergencies();
-    }
-
-    // ── ADMIN: Get by ID ──────────────────────────────
-    @GetMapping("/{id}")
-    public Emergency getById(@PathVariable Long id) {
-        return service.getById(id);
-    }
-
-    // ── PUBLIC: Reporter tracks by tracking ID ────────
+    /** Track an emergency by tracking ID (citizen polling) */
     @GetMapping("/track/{trackingId}")
-    public ResponseEntity<Emergency> getByTrackingId(@PathVariable String trackingId) {
-        Emergency emergency = service.getByTrackingId(trackingId);
-        if (emergency == null) return ResponseEntity.notFound().build();
-        // Return limited info — no full list, just their own record
-        return ResponseEntity.ok(emergency);
+    public ResponseEntity<Emergency> trackEmergency(@PathVariable String trackingId) {
+        return ResponseEntity.ok(emergencyService.getEmergencyByTrackingId(trackingId));
     }
 
-    // ── PUBLIC: Reporter verifies identity (name + phone) ──
-    // Used on Track tab — verify the reporter owns the tracking ID
-    @PostMapping("/verify")
-    public ResponseEntity<?> verifyReporter(@RequestBody Map<String, String> body) {
-        String trackingId   = body.get("trackingId");
-        String reporterName  = body.get("reporterName");
-        String reporterPhone = body.get("reporterPhone");
+    // ── ADMIN endpoints (JWT protected via SecurityConfig) ───────────────────
 
-        if (trackingId == null || reporterName == null || reporterPhone == null) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "trackingId, reporterName and reporterPhone are required"));
-        }
-
-        Emergency emergency = service.getByTrackingId(trackingId.toUpperCase().trim());
-
-        if (emergency == null) {
-            return ResponseEntity.status(404)
-                    .body(Map.of("error", "No emergency found with that tracking ID"));
-        }
-
-        // Check name AND phone match (case-insensitive name check)
-        boolean nameMatch  = reporterName.trim().equalsIgnoreCase(emergency.getReporterName());
-        boolean phoneMatch = reporterPhone.trim().equals(emergency.getReporterPhone());
-
-        if (!nameMatch || !phoneMatch) {
-            return ResponseEntity.status(401)
-                    .body(Map.of("error", "Name or phone number does not match our records"));
-        }
-
-        // ✅ Verified — return full emergency details
-        return ResponseEntity.ok(emergency);
+    @GetMapping
+    public ResponseEntity<List<Emergency>> getAllEmergencies() {
+        return ResponseEntity.ok(emergencyService.getAllEmergencies());
     }
 
-    // ── ADMIN: Get by priority ────────────────────────
-    @GetMapping("/priority/{priority}")
-    public List<Emergency> getByPriority(@PathVariable String priority) {
-        return service.getByPriority(priority);
+    @GetMapping("/{id}")
+    public ResponseEntity<Emergency> getEmergencyById(@PathVariable Long id) {
+        return ResponseEntity.ok(emergencyService.getEmergencyById(id));
     }
 
-    // ── ADMIN: Get by status ──────────────────────────
-    @GetMapping("/status/{status}")
-    public List<Emergency> getByStatus(@PathVariable String status) {
-        return service.getByStatus(status);
-    }
-
-    // ── ADMIN: Update (resolve etc.) ──────────────────
     @PutMapping("/{id}")
-    public Emergency update(@PathVariable Long id, @RequestBody Emergency emergency) {
-        boolean wasActive = false;
-        Emergency existing = service.getById(id);
-        if (existing != null) wasActive = !"RESOLVED".equals(existing.getStatus());
-
-        Emergency updated = service.updateEmergency(id, emergency);
-
-        if (updated != null) {
-            messagingTemplate.convertAndSend("/topic/emergencies", updated);
-            messagingTemplate.convertAndSend("/topic/track/" + updated.getTrackingId(), updated);
-
-            boolean nowResolved = "RESOLVED".equals(updated.getStatus());
-            if (wasActive && nowResolved && updated.getReporterPhone() != null
-                    && !updated.getReporterPhone().isEmpty()) {
-                smsService.sendResolveNotification(
-                    updated.getReporterPhone(), updated.getType(),
-                    updated.getLocation(), updated.getTrackingId()
-                );
-            }
-        }
-        return updated;
+    public ResponseEntity<Emergency> updateEmergency(@PathVariable Long id,
+                                                      @RequestBody Emergency emergency) {
+        return ResponseEntity.ok(emergencyService.updateEmergency(id, emergency));
     }
 
-    // ── ADMIN: Delete ─────────────────────────────────
     @DeleteMapping("/{id}")
-    public String delete(@PathVariable Long id) {
-        service.deleteEmergency(id);
-        return "Deleted successfully";
+    public ResponseEntity<Void> deleteEmergency(@PathVariable Long id) {
+        emergencyService.deleteEmergency(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Admin: Re-run AI classification on an existing emergency.
+     * POST /api/emergencies/{id}/reclassify
+     */
+    @PostMapping("/{id}/reclassify")
+    public ResponseEntity<Emergency> reclassify(@PathVariable Long id) {
+        return ResponseEntity.ok(emergencyService.reclassifyEmergency(id));
+    }
+
+    /**
+     * Admin: Manually override priority.
+     * PATCH /api/emergencies/{id}/priority
+     * Body: { "priority": "HIGH" }
+     */
+    @PatchMapping("/{id}/priority")
+    public ResponseEntity<Emergency> overridePriority(@PathVariable Long id,
+                                                       @RequestBody Map<String, String> body) {
+        String priority = body.get("priority");
+        if (priority == null || priority.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(emergencyService.overridePriority(id, priority));
     }
 }

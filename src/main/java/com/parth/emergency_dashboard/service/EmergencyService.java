@@ -2,6 +2,7 @@ package com.parth.emergency_dashboard.service;
 
 import com.parth.emergency_dashboard.model.Emergency;
 import com.parth.emergency_dashboard.repository.EmergencyRepository;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,120 +11,131 @@ import java.util.UUID;
 @Service
 public class EmergencyService {
 
-    private final EmergencyRepository repository;
+    private final EmergencyRepository emergencyRepository;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final AiClassificationService aiClassificationService;
 
-    public EmergencyService(EmergencyRepository repository) {
-        this.repository = repository;
+    public EmergencyService(EmergencyRepository emergencyRepository,
+                            SimpMessagingTemplate messagingTemplate,
+                            AiClassificationService aiClassificationService) {
+        this.emergencyRepository = emergencyRepository;
+        this.messagingTemplate = messagingTemplate;
+        this.aiClassificationService = aiClassificationService;
     }
 
-    // ✅ Add emergency — auto-generate tracking ID + auto-set priority
-    public Emergency addEmergency(Emergency emergency) {
-
-        String trackingId = "TRK-" + UUID.randomUUID()
-                .toString()
-                .toUpperCase()
-                .replace("-", "")
-                .substring(0, 6);
-        emergency.setTrackingId(trackingId);
-
-        // ✅ Auto-assign priority ONLY if not provided
-        if (emergency.getPriority() == null || emergency.getPriority().isEmpty()) {
-            emergency.setPriority(determinePriority(emergency.getType()));
+    /**
+     * Creates a new emergency, auto-classifies priority via AI, then broadcasts via WebSocket.
+     * Called when a citizen submits a report.
+     */
+    public Emergency createEmergency(Emergency emergency) {
+        // Generate tracking ID if not present
+        if (emergency.getTrackingId() == null || emergency.getTrackingId().isBlank()) {
+            emergency.setTrackingId(generateTrackingId());
         }
 
-        return repository.save(emergency);
-    }
+        // Set default status if not provided
+        if (emergency.getStatus() == null || emergency.getStatus().isBlank()) {
+            emergency.setStatus("OPEN");
+        }
 
-    // ✅ Get all emergencies (sorted by priority: HIGH → MEDIUM → LOW)
-    public List<Emergency> getAllEmergencies() {
-        List<Emergency> list = repository.findAll();
-        list.sort((e1, e2) ->
-                getPriorityValue(e2.getPriority()) - getPriorityValue(e1.getPriority())
+        // ── AI PRIORITY CLASSIFICATION ───────────────────────────────────────
+        // Always classify via AI — overrides whatever priority the citizen sent
+        String aiPriority = aiClassificationService.classifyPriority(
+                emergency.getType(),
+                emergency.getLocation(),
+                emergency.getDescription()
         );
-        return list;
+        emergency.setPriority(aiPriority);
+        emergency.setAiClassified(true);
+        // ─────────────────────────────────────────────────────────────────────
+
+        Emergency saved = emergencyRepository.save(emergency);
+
+        // Broadcast real-time update to all WebSocket subscribers
+        messagingTemplate.convertAndSend("/topic/emergencies", saved);
+
+        return saved;
     }
 
-    // ✅ Get emergencies by priority
-    public List<Emergency> getByPriority(String priority) {
-        return repository.findByPriority(priority);
+    /**
+     * Admin manually re-triggers AI classification for an existing emergency.
+     * Useful if the report was edited after submission.
+     */
+    public Emergency reclassifyEmergency(Long id) {
+        Emergency emergency = emergencyRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Emergency not found: " + id));
+
+        String aiPriority = aiClassificationService.classifyPriority(
+                emergency.getType(),
+                emergency.getLocation(),
+                emergency.getDescription()
+        );
+        emergency.setPriority(aiPriority);
+        emergency.setAiClassified(true);
+
+        Emergency saved = emergencyRepository.save(emergency);
+
+        // Broadcast the updated emergency
+        messagingTemplate.convertAndSend("/topic/emergencies", saved);
+
+        return saved;
     }
 
-    // ✅ Get emergencies by status
-    public List<Emergency> getByStatus(String status) {
-        return repository.findByStatus(status);
+    /**
+     * Admin manually overrides the AI-assigned priority.
+     * Sets aiClassified = false so the dashboard can show a "manual override" badge.
+     */
+    public Emergency overridePriority(Long id, String newPriority) {
+        String normalised = newPriority.toUpperCase().trim();
+        if (!List.of("HIGH", "MEDIUM", "LOW").contains(normalised)) {
+            throw new IllegalArgumentException("Priority must be HIGH, MEDIUM, or LOW");
+        }
+
+        Emergency emergency = emergencyRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Emergency not found: " + id));
+
+        emergency.setPriority(normalised);
+        emergency.setAiClassified(false); // mark as manually set
+
+        Emergency saved = emergencyRepository.save(emergency);
+        messagingTemplate.convertAndSend("/topic/emergencies", saved);
+
+        return saved;
     }
 
-    // ✅ Search by location
-    public List<Emergency> searchByLocation(String location) {
-        return repository.findByLocationContainingIgnoreCase(location);
+    public List<Emergency> getAllEmergencies() {
+        return emergencyRepository.findAll();
     }
 
-    // ✅ Get by ID
-    public Emergency getById(Long id) {
-        return repository.findById(id).orElse(null);
+    public Emergency getEmergencyById(Long id) {
+        return emergencyRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Emergency not found: " + id));
     }
 
-    // ✅ Get by tracking ID
-    public Emergency getByTrackingId(String trackingId) {
-        return repository.findByTrackingId(trackingId).orElse(null);
+    public Emergency getEmergencyByTrackingId(String trackingId) {
+        return emergencyRepository.findByTrackingId(trackingId)
+                .orElseThrow(() -> new RuntimeException("Tracking ID not found: " + trackingId));
     }
 
-    // ✅ Update emergency — ALL fields preserved so nothing gets wiped on resolve
     public Emergency updateEmergency(Long id, Emergency updated) {
-        Emergency existing = repository.findById(id).orElse(null);
-
-        if (existing != null) {
-            existing.setType(updated.getType());
-            existing.setLocation(updated.getLocation());
-            existing.setStatus(updated.getStatus());
-            existing.setLatitude(updated.getLatitude());
-            existing.setLongitude(updated.getLongitude());
-
-            // ✅ Preserve reporter info — don't wipe on resolve
-            if (updated.getReporterName() != null) existing.setReporterName(updated.getReporterName());
-            if (updated.getReporterPhone() != null) existing.setReporterPhone(updated.getReporterPhone());
-
-            // ✅ Handle priority — keep existing if not provided
-            if (updated.getPriority() != null && !updated.getPriority().isEmpty()) {
-                existing.setPriority(updated.getPriority());
-            } else {
-                existing.setPriority(determinePriority(updated.getType()));
-            }
-
-            return repository.save(existing);
-        }
-        return null;
+        Emergency existing = getEmergencyById(id);
+        existing.setType(updated.getType());
+        existing.setLocation(updated.getLocation());
+        existing.setStatus(updated.getStatus());
+        existing.setLatitude(updated.getLatitude());
+        existing.setLongitude(updated.getLongitude());
+        existing.setDescription(updated.getDescription());
+        // Note: priority is NOT updated here — use overridePriority() or reclassifyEmergency()
+        return emergencyRepository.save(existing);
     }
 
-    // ✅ Delete emergency
     public void deleteEmergency(Long id) {
-        repository.deleteById(id);
+        emergencyRepository.deleteById(id);
     }
 
-    // ✅ Helper: auto-determine priority from type
-    private String determinePriority(String type) {
-        if (type == null) return "LOW";
-        switch (type.toLowerCase()) {
-            case "fire":
-            case "accident":
-            case "medical":
-                return "HIGH";
-            case "theft":
-            case "robbery":
-                return "MEDIUM";
-            default:
-                return "LOW";
-        }
-    }
+    // ── Helpers ──────────────────────────────────────────────────────────────
 
-    // ✅ Helper: numeric value for sorting
-    private int getPriorityValue(String priority) {
-        if (priority == null) return 0;
-        switch (priority) {
-            case "HIGH":   return 3;
-            case "MEDIUM": return 2;
-            case "LOW":    return 1;
-            default:       return 0;
-        }
+    private String generateTrackingId() {
+        return "TRK-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
     }
 }

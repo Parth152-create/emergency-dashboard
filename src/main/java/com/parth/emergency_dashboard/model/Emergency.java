@@ -23,20 +23,33 @@ public class Emergency {
     private Double latitude;
     private Double longitude;
 
-    // ── NEW REPORTER FIELDS ──────────────────────────
+    // ── REPORTER FIELDS ──────────────────────────────
     private String reporterName;
     private String reporterPhone;
 
     @Column(unique = true)
     private String trackingId;  // e.g. "TRK-A3F9X2"
-    // ─────────────────────────────────────────────────
 
-    // 🔥 NEW FIELD: PRIORITY
+    // ── AI CLASSIFICATION FIELDS ─────────────────────
+    /**
+     * Free-text description from the reporter.
+     * Used by AiClassificationService to determine priority.
+     * Stored as TEXT to support longer descriptions.
+     */
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    /** Set automatically by AI. Manual override allowed by admin. */
     private String priority; // HIGH / MEDIUM / LOW
+
+    /** Whether priority was set by AI (true) or manually overridden (false) */
+    private boolean aiClassified = false;
+    // ─────────────────────────────────────────────────
 
     public Emergency() {}
 
-    // Getters & Setters
+    // ── Getters & Setters ────────────────────────────
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -64,7 +77,12 @@ public class Emergency {
     public String getTrackingId() { return trackingId; }
     public void setTrackingId(String trackingId) { this.trackingId = trackingId; }
 
-    // 🔥 NEW GETTERS/SETTERS FOR PRIORITY
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
     public String getPriority() { return priority; }
     public void setPriority(String priority) { this.priority = priority; }
+
+    public boolean isAiClassified() { return aiClassified; }
+    public void setAiClassified(boolean aiClassified) { this.aiClassified = aiClassified; }
 }
