@@ -2,6 +2,7 @@ package com.parth.emergency_dashboard.service;
 
 import com.parth.emergency_dashboard.model.Emergency;
 import com.parth.emergency_dashboard.repository.EmergencyRepository;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -14,32 +15,32 @@ public class EmergencyService {
     private final EmergencyRepository emergencyRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final AiClassificationService aiClassificationService;
+    private final VehicleSimulationService vehicleSimulationService;
 
     public EmergencyService(EmergencyRepository emergencyRepository,
                             SimpMessagingTemplate messagingTemplate,
-                            AiClassificationService aiClassificationService) {
-        this.emergencyRepository = emergencyRepository;
-        this.messagingTemplate = messagingTemplate;
-        this.aiClassificationService = aiClassificationService;
+                            AiClassificationService aiClassificationService,
+                            // @Lazy breaks the circular dependency (VehicleSimulationService
+                            // autowires EmergencyRepository directly, not EmergencyService)
+                            @Lazy VehicleSimulationService vehicleSimulationService) {
+        this.emergencyRepository      = emergencyRepository;
+        this.messagingTemplate        = messagingTemplate;
+        this.aiClassificationService  = aiClassificationService;
+        this.vehicleSimulationService = vehicleSimulationService;
     }
 
-    /**
-     * Creates a new emergency, auto-classifies priority via AI, then broadcasts via WebSocket.
-     * Called when a citizen submits a report.
-     */
     public Emergency createEmergency(Emergency emergency) {
-        // Generate tracking ID if not present
+        // Generate tracking ID
         if (emergency.getTrackingId() == null || emergency.getTrackingId().isBlank()) {
             emergency.setTrackingId(generateTrackingId());
         }
 
-        // Set default status if not provided
+        // Default status
         if (emergency.getStatus() == null || emergency.getStatus().isBlank()) {
-            emergency.setStatus("OPEN");
+            emergency.setStatus("REPORTED");
         }
 
-        // ── AI PRIORITY CLASSIFICATION ───────────────────────────────────────
-        // Always classify via AI — overrides whatever priority the citizen sent
+        // ── AI priority classification ────────────────────────────────────────
         String aiPriority = aiClassificationService.classifyPriority(
                 emergency.getType(),
                 emergency.getLocation(),
@@ -47,20 +48,21 @@ public class EmergencyService {
         );
         emergency.setPriority(aiPriority);
         emergency.setAiClassified(true);
-        // ─────────────────────────────────────────────────────────────────────
 
         Emergency saved = emergencyRepository.save(emergency);
 
-        // Broadcast real-time update to all WebSocket subscribers
+        // Broadcast new emergency to admin dashboard
         messagingTemplate.convertAndSend("/topic/emergencies", saved);
+
+        // ── Dispatch a vehicle ────────────────────────────────────────────────
+        // Only dispatch if coordinates are present (citizen pinned location)
+        if (saved.getLatitude() != null && saved.getLongitude() != null) {
+            vehicleSimulationService.dispatchVehicle(saved);
+        }
 
         return saved;
     }
 
-    /**
-     * Admin manually re-triggers AI classification for an existing emergency.
-     * Useful if the report was edited after submission.
-     */
     public Emergency reclassifyEmergency(Long id) {
         Emergency emergency = emergencyRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Emergency not found: " + id));
@@ -74,38 +76,25 @@ public class EmergencyService {
         emergency.setAiClassified(true);
 
         Emergency saved = emergencyRepository.save(emergency);
-
-        // Broadcast the updated emergency
         messagingTemplate.convertAndSend("/topic/emergencies", saved);
-
         return saved;
     }
 
-    /**
-     * Admin manually overrides the AI-assigned priority.
-     * Sets aiClassified = false so the dashboard can show a "manual override" badge.
-     */
     public Emergency overridePriority(Long id, String newPriority) {
         String normalised = newPriority.toUpperCase().trim();
         if (!List.of("HIGH", "MEDIUM", "LOW").contains(normalised)) {
             throw new IllegalArgumentException("Priority must be HIGH, MEDIUM, or LOW");
         }
-
         Emergency emergency = emergencyRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Emergency not found: " + id));
-
         emergency.setPriority(normalised);
-        emergency.setAiClassified(false); // mark as manually set
-
+        emergency.setAiClassified(false);
         Emergency saved = emergencyRepository.save(emergency);
         messagingTemplate.convertAndSend("/topic/emergencies", saved);
-
         return saved;
     }
 
-    public List<Emergency> getAllEmergencies() {
-        return emergencyRepository.findAll();
-    }
+    public List<Emergency> getAllEmergencies() { return emergencyRepository.findAll(); }
 
     public Emergency getEmergencyById(Long id) {
         return emergencyRepository.findById(id)
@@ -125,15 +114,12 @@ public class EmergencyService {
         existing.setLatitude(updated.getLatitude());
         existing.setLongitude(updated.getLongitude());
         existing.setDescription(updated.getDescription());
-        // Note: priority is NOT updated here — use overridePriority() or reclassifyEmergency()
-        return emergencyRepository.save(existing);
+        Emergency saved = emergencyRepository.save(existing);
+        messagingTemplate.convertAndSend("/topic/emergencies", saved);
+        return saved;
     }
 
-    public void deleteEmergency(Long id) {
-        emergencyRepository.deleteById(id);
-    }
-
-    // ── Helpers ──────────────────────────────────────────────────────────────
+    public void deleteEmergency(Long id) { emergencyRepository.deleteById(id); }
 
     private String generateTrackingId() {
         return "TRK-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();

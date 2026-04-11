@@ -146,6 +146,20 @@
     .nb-fire{background:rgba(255,87,34,.15);color:#ff5722}
     .nb-police{background:rgba(21,101,192,.15);color:#1565c0}
 
+    /* VEHICLE TRACKER */
+    .vehicle-tracker{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px}
+    .vehicle-tracker-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+    .vehicle-row{display:flex;align-items:center;gap:12px}
+    .vehicle-emoji{font-size:26px;flex-shrink:0}
+    .vehicle-detail{flex:1}
+    .vehicle-name-text{font-size:13px;font-weight:600;margin-bottom:4px}
+    .vehicle-status-pill{font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;text-transform:uppercase;display:inline-block}
+    .vp-idle{background:rgba(122,133,160,.15);color:var(--muted)}
+    .vp-dispatched{background:rgba(74,158,255,.15);color:var(--info)}
+    .vp-inprogress{background:rgba(156,39,176,.15);color:#b06fff;animation:pulse 1.5s infinite}
+    .vp-resolved{background:rgba(26,170,114,.15);color:var(--success)}
+    .vehicle-eta{font-size:11px;color:var(--muted);margin-top:4px}
+
     ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
   </style>
 </head>
@@ -241,6 +255,19 @@
         <div class="status-label">🤖 AI-assigned priority</div>
         <div id="disp-priority"></div>
         <div style="font-size:11px;color:var(--muted);margin-top:6px">Automatically classified based on your report</div>
+      </div>
+
+      <!-- ── VEHICLE TRACKER ── -->
+      <div class="vehicle-tracker" id="vehicle-tracker" style="display:none">
+        <div class="vehicle-tracker-label">🚨 Responder dispatched</div>
+        <div class="vehicle-row">
+          <div class="vehicle-emoji" id="disp-vehicle-emoji">🚑</div>
+          <div class="vehicle-detail">
+            <div class="vehicle-name-text" id="disp-vehicle-name">—</div>
+            <span class="vehicle-status-pill vp-dispatched" id="disp-vehicle-status">DISPATCHED</span>
+            <div class="vehicle-eta" id="disp-vehicle-eta">En route to your location</div>
+          </div>
+        </div>
       </div>
 
       <div class="status-box">
@@ -483,13 +510,19 @@ function renderNearestResources(){
 }
 
 // ── WEBSOCKET ─────────────────────────────────────────
-let stomp=null,trackSub=null;
+let stomp=null,trackSub=null,vehicleSub=null;
+let trackedEmergencyId=null;
+
+const VEHICLE_EMOJI_MAP={AMBULANCE:'🚑',FIRE_TRUCK:'🚒',POLICE_CAR:'🚔'};
 
 function connectWS(trackingId,statusElId,msgElId){
   if(stomp&&stomp.connected){subscribeTracking(trackingId,statusElId,msgElId);return}
   const s=new SockJS('/ws');
   stomp=Stomp.over(s);stomp.debug=null;
-  stomp.connect({},()=>subscribeTracking(trackingId,statusElId,msgElId));
+  stomp.connect({},()=>{
+    subscribeTracking(trackingId,statusElId,msgElId);
+    subscribeVehicles();
+  });
 }
 
 function subscribeTracking(tid,statusElId,msgElId){
@@ -498,6 +531,40 @@ function subscribeTracking(tid,statusElId,msgElId){
     const e=JSON.parse(msg.body);
     updateStatusEl(statusElId,msgElId,e.status);
   });
+}
+
+function subscribeVehicles(){
+  if(vehicleSub)vehicleSub.unsubscribe();
+  vehicleSub=stomp.subscribe('/topic/vehicles',msg=>{
+    const vehicles=JSON.parse(msg.body);
+    if(trackedEmergencyId) updateVehicleTracker(vehicles,trackedEmergencyId);
+  });
+}
+
+function updateVehicleTracker(vehicles,emergencyId){
+  const v=vehicles.find(v=>v.assignedEmergencyId==emergencyId);
+  if(!v||v.vehicleStatus==='IDLE')return;
+
+  const tracker=document.getElementById('vehicle-tracker');
+  const emojiEl=document.getElementById('disp-vehicle-emoji');
+  const nameEl=document.getElementById('disp-vehicle-name');
+  const statusEl=document.getElementById('disp-vehicle-status');
+  const etaEl=document.getElementById('disp-vehicle-eta');
+
+  tracker.style.display='block';
+  emojiEl.textContent=VEHICLE_EMOJI_MAP[v.type]||'🚑';
+  nameEl.textContent=v.name;
+
+  const sc=v.vehicleStatus.toLowerCase().replace('_','');
+  statusEl.className=`vehicle-status-pill vp-${sc}`;
+  statusEl.textContent=v.vehicleStatus.replace('_',' ');
+
+  const etaMessages={
+    DISPATCHED:'En route to your location…',
+    IN_PROGRESS:'Responder is nearby — almost there!',
+    RESOLVED:'Responder has arrived ✅'
+  };
+  etaEl.textContent=etaMessages[v.vehicleStatus]||'';
 }
 
 function updateStatusEl(statusElId,msgElId,status){
@@ -532,6 +599,12 @@ function submitReport(){
     document.getElementById('success-card').style.display='block';
     document.getElementById('disp-tid').textContent=saved.trackingId;
     updateStatusEl('disp-status','ws-live-msg',saved.status);
+    trackedEmergencyId=saved.id;
+
+    // Show vehicle tracker immediately if dispatched
+    if(saved.status==='DISPATCHED'){
+      document.getElementById('vehicle-tracker').style.display='block';
+    }
 
     // ── AI PRIORITY BADGE ──────────────────────────────
     const p=saved.priority||'MEDIUM';
@@ -617,6 +690,8 @@ function reportAnother(){
   document.getElementById('r-type').value='';
   document.getElementById('r-desc').value='';
   // ── reset priority box ──
+  document.getElementById('vehicle-tracker').style.display='none';
+  trackedEmergencyId=null;
   document.getElementById('priority-box').style.display='none';
   document.getElementById('disp-priority').innerHTML='';
   if(reportPin){reportMap.removeLayer(reportPin);reportPin=null}

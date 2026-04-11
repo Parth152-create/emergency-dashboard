@@ -33,6 +33,46 @@ public class EmergencyController {
         return ResponseEntity.ok(emergencyService.getEmergencyByTrackingId(trackingId));
     }
 
+    /**
+     * Citizen identity verification before showing emergency details.
+     * POST /api/emergencies/verify
+     * Body: { "trackingId": "TRK-XXXXXX", "reporterName": "...", "reporterPhone": "..." }
+     *
+     * Returns the emergency if name+phone match, 403 otherwise.
+     * Must be PUBLIC in SecurityConfig — add to permitAll list.
+     */
+    @PostMapping("/verify")
+    public ResponseEntity<?> verifyAndTrack(@RequestBody Map<String, String> body) {
+        String trackingId    = body.get("trackingId");
+        String reporterName  = body.get("reporterName");
+        String reporterPhone = body.get("reporterPhone");
+
+        if (trackingId == null || reporterName == null || reporterPhone == null) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "trackingId, reporterName and reporterPhone are required"));
+        }
+
+        try {
+            Emergency e = emergencyService.getEmergencyByTrackingId(trackingId.trim().toUpperCase());
+
+            boolean nameMatch  = reporterName.trim().equalsIgnoreCase(
+                                     e.getReporterName() != null ? e.getReporterName().trim() : "");
+            boolean phoneMatch = reporterPhone.trim().equals(
+                                     e.getReporterPhone() != null ? e.getReporterPhone().trim() : "");
+
+            if (nameMatch && phoneMatch) {
+                return ResponseEntity.ok(e);
+            } else {
+                return ResponseEntity.status(403)
+                        .body(Map.of("error", "Name or phone number does not match our records"));
+            }
+
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(404)
+                    .body(Map.of("error", "Tracking ID not found"));
+        }
+    }
+
     // ── ADMIN endpoints (JWT protected via SecurityConfig) ───────────────────
 
     @GetMapping
@@ -57,20 +97,11 @@ public class EmergencyController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Admin: Re-run AI classification on an existing emergency.
-     * POST /api/emergencies/{id}/reclassify
-     */
     @PostMapping("/{id}/reclassify")
     public ResponseEntity<Emergency> reclassify(@PathVariable Long id) {
         return ResponseEntity.ok(emergencyService.reclassifyEmergency(id));
     }
 
-    /**
-     * Admin: Manually override priority.
-     * PATCH /api/emergencies/{id}/priority
-     * Body: { "priority": "HIGH" }
-     */
     @PatchMapping("/{id}/priority")
     public ResponseEntity<Emergency> overridePriority(@PathVariable Long id,
                                                        @RequestBody Map<String, String> body) {

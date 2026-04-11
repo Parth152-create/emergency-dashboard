@@ -94,7 +94,10 @@
     .priority-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:.3px}
     .pb-high{background:rgba(229,57,53,.15);color:var(--high)}.pb-medium{background:rgba(244,166,35,.15);color:var(--medium)}.pb-low{background:rgba(26,170,114,.15);color:var(--low)}
     .estatus{font-size:10px;padding:3px 9px;border-radius:20px;font-weight:500;text-transform:uppercase}
-    .estatus.s-reported{background:rgba(244,166,35,.15);color:var(--medium)}.estatus.s-resolved{background:rgba(26,170,114,.15);color:var(--success)}
+    .estatus.s-reported{background:rgba(244,166,35,.15);color:var(--medium)}
+    .estatus.s-dispatched{background:rgba(74,158,255,.15);color:var(--info)}
+    .estatus.s-inprogress{background:rgba(156,39,176,.15);color:#b06fff}
+    .estatus.s-resolved{background:rgba(26,170,114,.15);color:var(--success)}
     .divider{border:none;border-top:1px solid var(--border);margin:10px 0}
     .ereporter{font-size:12px;color:var(--muted);margin-bottom:4px}
     .eloc{font-size:13px;margin-bottom:5px}
@@ -125,6 +128,18 @@
     .panel-type{font-size:13px;font-weight:600}
     .panel-loc{font-size:11px;color:var(--muted);margin-bottom:2px}
     .panel-empty{padding:28px;text-align:center;color:var(--muted);font-size:13px}
+    /* Vehicle panel section */
+    .vehicle-section{padding:8px;border-bottom:1px solid var(--border)}
+    .vehicle-section-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;padding:4px 5px 8px}
+    .vehicle-item{padding:10px 13px;border-radius:9px;border:1px solid var(--border);margin-bottom:6px;display:flex;align-items:center;gap:10px}
+    .vehicle-icon{font-size:20px;flex-shrink:0}
+    .vehicle-info{flex:1;min-width:0}
+    .vehicle-name{font-size:12px;font-weight:600}
+    .vehicle-status-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;text-transform:uppercase;display:inline-block;margin-top:3px}
+    .vs-idle{background:rgba(122,133,160,.15);color:var(--muted)}
+    .vs-dispatched{background:rgba(74,158,255,.15);color:var(--info)}
+    .vs-inprogress{background:rgba(156,39,176,.15);color:#b06fff}
+    .vs-resolved{background:rgba(26,170,114,.15);color:var(--success)}
     .res-full-layout{display:grid;grid-template-columns:1fr 320px;flex:1;overflow:hidden}
     .res-map-wrap{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
     #res-map-admin{flex:1}
@@ -247,17 +262,18 @@
               <span class="legend-item"><span class="legend-sq" style="background:#e91e63"></span>Hospital</span>
               <span class="legend-item"><span class="legend-sq" style="background:#ff5722"></span>Fire Stn</span>
               <span class="legend-item"><span class="legend-sq" style="background:#1565c0"></span>Police</span>
+              <span class="legend-item"><span style="font-size:13px;line-height:1">🚑🚒🚔</span>Vehicles</span>
             </div>
             <div class="filters">
               <select class="f-select" id="filter-priority" onchange="applyMapFilters()"><option value="all">All Priority</option><option value="HIGH">🔴 High</option><option value="MEDIUM">🟡 Medium</option><option value="LOW">🟢 Low</option></select>
-              <select class="f-select" id="filter-status" onchange="applyMapFilters()"><option value="all">All Status</option><option value="REPORTED">Reported</option><option value="RESOLVED">Resolved</option></select>
+              <select class="f-select" id="filter-status" onchange="applyMapFilters()"><option value="all">All Status</option><option value="REPORTED">Reported</option><option value="DISPATCHED">Dispatched</option><option value="IN_PROGRESS">In Progress</option><option value="RESOLVED">Resolved</option></select>
               <select class="f-select" id="filter-resources" onchange="toggleResources()"><option value="show">Resources: On</option><option value="hide">Resources: Off</option></select>
             </div>
           </div>
           <div id="map-full" style="flex:1"></div>
         </div>
         <div class="side-panel">
-          <div class="side-panel-hdr"><span>Emergency List</span><span id="panel-count" style="font-size:11px;color:var(--muted)">—</span></div>
+          <div class="side-panel-hdr"><span>Live Dispatch</span><span id="panel-count" style="font-size:11px;color:var(--muted)">—</span></div>
           <div class="side-panel-body" id="side-panel-body"></div>
         </div>
       </div>
@@ -271,7 +287,7 @@
           <div class="filters">
             <input class="search-input" id="search-input" placeholder="🔍 Search..." oninput="renderEmergencies()"/>
             <select class="f-select" id="list-priority" onchange="renderEmergencies()"><option value="all">All Priority</option><option value="HIGH">🔴 High</option><option value="MEDIUM">🟡 Medium</option><option value="LOW">🟢 Low</option></select>
-            <select class="f-select" id="list-status" onchange="renderEmergencies()"><option value="all">All Status</option><option value="REPORTED">Reported</option><option value="RESOLVED">Resolved</option></select>
+            <select class="f-select" id="list-status" onchange="renderEmergencies()"><option value="all">All Status</option><option value="REPORTED">Reported</option><option value="DISPATCHED">Dispatched</option><option value="IN_PROGRESS">In Progress</option><option value="RESOLVED">Resolved</option></select>
           </div>
         </div>
         <div id="elist-full" class="elist-grid" style="overflow-y:auto;flex:1"></div>
@@ -337,43 +353,24 @@
 
 // ── JWT AUTH ──────────────────────────────────────────
 const token = localStorage.getItem('jwt');
-
-// Redirect to login if no token
-if (!token) {
-  window.location.href = '/login.html';
-}
-
-// Show logged in username in topbar
+if (!token) window.location.href = '/login.html';
 try {
   const payload = JSON.parse(atob(token.split('.')[1]));
   document.getElementById('logged-in-user').textContent = '👤 ' + payload.sub;
 } catch(e) {}
 
-// ✅ Central auth fetch — adds JWT header to every request
 function authFetch(url, options = {}) {
   return fetch(url, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + token,
-      ...(options.headers || {})
-    }
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, ...(options.headers || {}) }
   }).then(res => {
-    // If token expired or invalid, redirect to login
-    if (res.status === 401 || res.status === 403) {
-      localStorage.removeItem('jwt');
-      window.location.href = '/login.html';
-    }
+    if (res.status === 401 || res.status === 403) { localStorage.removeItem('jwt'); window.location.href = '/login.html'; }
     return res;
   });
 }
+function logout() { localStorage.removeItem('jwt'); window.location.href = '/login.html'; }
 
-function logout() {
-  localStorage.removeItem('jwt');
-  window.location.href = '/login.html';
-}
-
-// ── RESOURCES ─────────────────────────────────────────
+// ── CONSTANTS ─────────────────────────────────────────
 const RESOURCES=[
   {name:'AIIMS Bhopal',type:'hospital',lat:23.2599,lng:77.4664,phone:'0755-2672335'},
   {name:'Hamidia Hospital',type:'hospital',lat:23.2584,lng:77.4011,phone:'0755-2540222'},
@@ -395,7 +392,10 @@ const RES_EMOJI={hospital:'🏥',fire:'🚒',police:'🚔'};
 const TYPE_EMOJI={FIRE:'🔥',POLICE:'🚔',MEDICAL:'🏥',ACCIDENT:'🚗',FLOOD:'🌊',OTHER:'⚠️'};
 const TYPE_CLASS={FIRE:'t-fire',POLICE:'t-police',MEDICAL:'t-medical',ACCIDENT:'t-accident',FLOOD:'t-flood',OTHER:'t-other'};
 const PRIORITY_COLOR={HIGH:'#e53935',MEDIUM:'#f4a623',LOW:'#1aaa72'};
+const VEHICLE_EMOJI={AMBULANCE:'🚑',FIRE_TRUCK:'🚒',POLICE_CAR:'🚔'};
+const STATUS_COLORS={DISPATCHED:'#4a9eff',IN_PROGRESS:'#b06fff',RESOLVED:'#1aaa72',IDLE:'#7a85a0'};
 
+// ── ICON FACTORIES ────────────────────────────────────
 function resIcon(r,size=28){
   return L.divIcon({className:'',html:`<div style="background:${RES_COLORS[r.type]};width:${size}px;height:${size}px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:${size*.55}px;border:2px solid rgba(255,255,255,.85);box-shadow:0 2px 8px rgba(0,0,0,.35)">${RES_EMOJI[r.type]}</div>`,iconSize:[size,size],iconAnchor:[size/2,size/2],popupAnchor:[0,-size/2+4]});
 }
@@ -406,6 +406,21 @@ function makeEmergencyMarker(e){
   return L.divIcon({className:'',html:`<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 44"><path d="M18 0C8 0 0 8 0 18C0 30 18 44 18 44C18 44 36 30 36 18C36 8 28 0 18 0Z" fill="${color}" stroke="rgba(255,255,255,0.85)" stroke-width="1.8"/><text x="18" y="22" text-anchor="middle" dominant-baseline="central" font-size="15" font-family="Apple Color Emoji,Segoe UI Emoji,sans-serif">${emoji}</text></svg>`,iconSize:[36,44],iconAnchor:[18,44],popupAnchor:[0,-46]});
 }
 
+function makeVehicleIcon(v) {
+  const emoji = VEHICLE_EMOJI[v.type] || '🚑';
+  const color = STATUS_COLORS[v.vehicleStatus] || '#7a85a0';
+  const pulse = v.vehicleStatus === 'IN_PROGRESS' ?
+    `<div style="position:absolute;inset:-4px;border-radius:50%;border:2px solid ${color};animation:blink 1s infinite;"></div>` : '';
+  return L.divIcon({
+    className: '',
+    html: `<div style="position:relative;width:34px;height:34px">
+      ${pulse}
+      <div style="width:34px;height:34px;border-radius:50%;background:#1c2030;border:2.5px solid ${color};display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 2px 10px rgba(0,0,0,.5)">${emoji}</div>
+    </div>`,
+    iconSize: [34, 34], iconAnchor: [17, 17], popupAnchor: [0, -20]
+  });
+}
+
 function emergencyPopup(e){
   const color=e.status==='RESOLVED'?'#1aaa72':(PRIORITY_COLOR[e.priority]||'#546e7a');
   return `<div style="font-family:'DM Sans',sans-serif;min-width:190px;line-height:1.65">
@@ -414,7 +429,7 @@ function emergencyPopup(e){
     ${e.reporterPhone?`<div style="font-size:12px;margin-bottom:2px">📞 ${e.reporterPhone}</div>`:''}
     ${e.reporterName?`<div style="font-size:12px;margin-bottom:8px">👤 ${e.reporterName}</div>`:''}
     <div style="display:flex;gap:6px;flex-wrap:wrap">
-      <span style="background:${color}22;color:${color};font-size:11px;padding:2px 9px;border-radius:10px;font-weight:600">⚠️ ${e.priority||'—'}</span>
+      <span style="background:${color}22;color:${color};font-size:11px;padding:2px 9px;border-radius:10px;font-weight:600">${e.priority||'—'}</span>
       <span style="background:rgba(128,128,128,.15);font-size:11px;padding:2px 9px;border-radius:10px">${e.status}</span>
     </div>
     ${e.trackingId?`<div style="font-size:10px;color:#888;margin-top:6px;font-family:monospace">${e.trackingId}</div>`:''}
@@ -441,7 +456,7 @@ function switchView(v){
   document.getElementById('topbar-title').textContent=VIEWS[v].title;
   document.getElementById('topbar-sub').textContent=VIEWS[v].sub;
   currentView=v;
-  if(v==='map'){setTimeout(()=>{mapFull.invalidateSize();applyMapFilters()},50)}
+  if(v==='map'){setTimeout(()=>{mapFull.invalidateSize();applyMapFilters();renderVehicleMarkersOnFull()},50)}
   if(v==='emergencies')renderEmergencies();
   if(v==='resources'){setTimeout(()=>{resMapAdmin.invalidateSize();renderAdminResources('all')},50)}
 }
@@ -471,6 +486,64 @@ function toggleResources(){
   show?resourceLayer.addTo(mapFull):mapFull.removeLayer(resourceLayer);
 }
 
+// ── VEHICLE MARKERS ───────────────────────────────────
+let vehicleMarkersDash = {};  // id → L.Marker
+let vehicleMarkersFull = {};  // id → L.Marker
+let allVehicles = [];
+
+function renderVehicleMarkersOnDash(vehicles) {
+  // Remove stale
+  Object.keys(vehicleMarkersDash).forEach(id => {
+    if (!vehicles.find(v => v.id == id)) {
+      mapDash.removeLayer(vehicleMarkersDash[id]);
+      delete vehicleMarkersDash[id];
+    }
+  });
+  vehicles.forEach(v => {
+    if (!v.currentLat || !v.currentLng) return;
+    const icon = makeVehicleIcon(v);
+    if (vehicleMarkersDash[v.id]) {
+      vehicleMarkersDash[v.id].setLatLng([v.currentLat, v.currentLng]).setIcon(icon);
+    } else {
+      vehicleMarkersDash[v.id] = L.marker([v.currentLat, v.currentLng], {icon, zIndexOffset: 500})
+        .bindPopup(vehiclePopup(v)).addTo(mapDash);
+    }
+    vehicleMarkersDash[v.id].getPopup()?.setContent(vehiclePopup(v));
+  });
+}
+
+function renderVehicleMarkersOnFull(vehicles) {
+  const vlist = vehicles || allVehicles;
+  Object.keys(vehicleMarkersFull).forEach(id => {
+    if (!vlist.find(v => v.id == id)) {
+      mapFull.removeLayer(vehicleMarkersFull[id]);
+      delete vehicleMarkersFull[id];
+    }
+  });
+  vlist.forEach(v => {
+    if (!v.currentLat || !v.currentLng) return;
+    const icon = makeVehicleIcon(v);
+    if (vehicleMarkersFull[v.id]) {
+      vehicleMarkersFull[v.id].setLatLng([v.currentLat, v.currentLng]).setIcon(icon);
+    } else {
+      vehicleMarkersFull[v.id] = L.marker([v.currentLat, v.currentLng], {icon, zIndexOffset: 500})
+        .bindPopup(vehiclePopup(v)).addTo(mapFull);
+    }
+    vehicleMarkersFull[v.id].getPopup()?.setContent(vehiclePopup(v));
+  });
+}
+
+function vehiclePopup(v) {
+  const emoji = VEHICLE_EMOJI[v.type] || '🚑';
+  const color = STATUS_COLORS[v.vehicleStatus] || '#7a85a0';
+  return `<div style="font-family:'DM Sans',sans-serif;min-width:160px">
+    <div style="font-weight:600;font-size:14px;margin-bottom:6px">${emoji} ${v.name}</div>
+    <div style="font-size:11px;background:${color}22;color:${color};padding:2px 9px;border-radius:10px;display:inline-block;font-weight:600;text-transform:uppercase">${v.vehicleStatus}</div>
+    ${v.assignedEmergencyId ? `<div style="font-size:11px;color:#888;margin-top:6px">Emergency #${v.assignedEmergencyId}</div>` : ''}
+  </div>`;
+}
+
+// ── RESOURCES ADMIN ───────────────────────────────────
 let adminResMarkers=[];
 function renderAdminResources(filter){
   adminResMarkers.forEach(m=>resMapAdmin.removeLayer(m));adminResMarkers=[];
@@ -483,13 +556,11 @@ function renderAdminResources(filter){
   if(adminResMarkers.length>0){const g=L.featureGroup(adminResMarkers);resMapAdmin.fitBounds(g.getBounds().pad(.2))}
   renderResList(filter);
 }
-
 function filterAdminRes(f,el){document.querySelectorAll('#view-resources .map-toolbar .f-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderAdminResources(f)}
-function filterResList(f,el){document.querySelectorAll('.res-filters .f-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderResList(f)}
-
+function filterResList(f,el){if(el){document.querySelectorAll('.res-filters .f-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active')}renderResList(f)}
 function renderResList(filter){
   const el=document.getElementById('res-panel-body');
-  el.innerHTML=RESOURCES.filter(r=>filter==='all'||r.type===filter).map(r=>`
+  el.innerHTML=RESOURCES.filter(r=>!filter||filter==='all'||r.type===filter).map(r=>`
     <div class="res-card" onclick="resMapAdmin.flyTo([${r.lat},${r.lng}],16)">
       <div class="res-card-top"><span style="font-size:18px">${RES_EMOJI[r.type]}</span><span class="res-name">${r.name}</span></div>
       <div class="res-info">📞 ${r.phone}</div>
@@ -506,12 +577,49 @@ let knownIds=new Set();
 stomp.connect({},()=>{
   wsEl.innerHTML='<div class="ws-dot"></div><span>Live</span>';
   document.getElementById('s-ws').textContent='Connected';
+
+  // Emergency updates
   stomp.subscribe('/topic/emergencies',msg=>{
     const inc=JSON.parse(msg.body);
     if(inc.priority==='HIGH'&&!knownIds.has(inc.id))showAlert(inc);
     loadData();
   });
+
+  // ── Vehicle position updates ──────────────────────
+  stomp.subscribe('/topic/vehicles', msg => {
+    allVehicles = JSON.parse(msg.body);
+    renderVehicleMarkersOnDash(allVehicles);
+    renderVehicleMarkersOnFull(allVehicles);
+    renderVehiclePanel(allVehicles);
+  });
+
 },()=>{wsEl.innerHTML='<span>🔴 Disconnected</span>';wsEl.style.color='var(--accent)'});
+
+// ── VEHICLE SIDE PANEL ────────────────────────────────
+function renderVehiclePanel(vehicles) {
+  const el = document.getElementById('side-panel-body');
+  const vehicleHtml = `
+    <div class="vehicle-section">
+      <div class="vehicle-section-title">🚨 Dispatch Status</div>
+      ${vehicles.map(v => {
+        const emoji = VEHICLE_EMOJI[v.type] || '🚑';
+        const sc = v.vehicleStatus.toLowerCase().replace('_','');
+        const color = STATUS_COLORS[v.vehicleStatus] || '#7a85a0';
+        return `<div class="vehicle-item" onclick="${v.currentLat?`mapFull.flyTo([${v.currentLat},${v.currentLng}],16)`:''}">
+          <div class="vehicle-icon">${emoji}</div>
+          <div class="vehicle-info">
+            <div class="vehicle-name">${v.name}</div>
+            <span class="vehicle-status-badge vs-${sc}">${v.vehicleStatus.replace('_',' ')}</span>
+            ${v.assignedEmergencyId&&v.vehicleStatus!=='IDLE'?`<div style="font-size:10px;color:var(--muted);margin-top:3px">→ Emergency #${v.assignedEmergencyId}</div>`:''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  // Keep existing emergency panel below vehicles
+  const existingEmergencyPanel = el.querySelector('#emergency-panel-inner');
+  el.innerHTML = vehicleHtml + `<div id="emergency-panel-inner">${existingEmergencyPanel ? existingEmergencyPanel.innerHTML : ''}</div>`;
+}
 
 // ── ALERT ─────────────────────────────────────────────
 let alertTimer=null;
@@ -522,24 +630,31 @@ function showAlert(e){
 }
 function closeAlert(){document.getElementById('alert-popup').classList.remove('show')}
 
-// ── DATA (all fetch calls use authFetch) ──────────────
+// ── DATA ──────────────────────────────────────────────
 let allData=[],dashFilter='all',listExpanded=false;
 
 function loadData(){
-  authFetch('/api/emergencies')
-    .then(r=>r.json()).then(data=>{
-      allData=data;knownIds=new Set(data.map(e=>e.id));
-      const active=data.filter(e=>e.status!=='RESOLVED');
-      document.getElementById('s-high').textContent=data.filter(e=>e.priority==='HIGH').length;
-      document.getElementById('s-med').textContent=data.filter(e=>e.priority==='MEDIUM').length;
-      document.getElementById('s-low').textContent=data.filter(e=>e.priority==='LOW').length;
-      document.getElementById('s-total').textContent=data.length;
-      const badge=document.getElementById('nav-active-count');
-      badge.textContent=active.length;badge.style.display=active.length>0?'':'none';
-      renderDashMarkers(data);renderDashCards();
-      if(currentView==='map')applyMapFilters();
-      if(currentView==='emergencies')renderEmergencies();
-    });
+  authFetch('/api/emergencies').then(r=>r.json()).then(data=>{
+    allData=data;knownIds=new Set(data.map(e=>e.id));
+    const active=data.filter(e=>e.status!=='RESOLVED');
+    document.getElementById('s-high').textContent=data.filter(e=>e.priority==='HIGH').length;
+    document.getElementById('s-med').textContent=data.filter(e=>e.priority==='MEDIUM').length;
+    document.getElementById('s-low').textContent=data.filter(e=>e.priority==='LOW').length;
+    document.getElementById('s-total').textContent=data.length;
+    const badge=document.getElementById('nav-active-count');
+    badge.textContent=active.length;badge.style.display=active.length>0?'':'none';
+    renderDashMarkers(data);renderDashCards();
+    if(currentView==='map')applyMapFilters();
+    if(currentView==='emergencies')renderEmergencies();
+  });
+
+  // Also load vehicles on initial data fetch
+  authFetch('/api/vehicles').then(r=>r.json()).then(vehicles=>{
+    allVehicles = vehicles;
+    renderVehicleMarkersOnDash(vehicles);
+    renderVehicleMarkersOnFull(vehicles);
+    renderVehiclePanel(vehicles);
+  });
 }
 
 function renderDashMarkers(data){
@@ -561,23 +676,41 @@ function applyMapFilters(){
 
 function renderSidePanel(data){
   const el=document.getElementById('side-panel-body');
-  document.getElementById('panel-count').textContent=data.length+' shown';
-  if(!data.length){el.innerHTML='<div class="panel-empty">No emergencies match filters</div>';return}
+  document.getElementById('panel-count').textContent=data.length+' emergencies';
   const sorted=[...data].sort((a,b)=>{const o={HIGH:0,MEDIUM:1,LOW:2};return (o[a.priority]??3)-(o[b.priority]??3)});
-  el.innerHTML=sorted.map(e=>{
-    const la=Number(e.latitude),ln=Number(e.longitude),hasCoords=!isNaN(la)&&!isNaN(ln);
-    const pClass=e.priority==='HIGH'?'pb-high':e.priority==='MEDIUM'?'pb-medium':'pb-low';
-    return `<div class="panel-item" onclick="${hasCoords?`mapFull.flyTo([${la},${ln}],16)`:''}">
-      <div class="panel-item-top"><span class="priority-badge ${pClass}">${e.priority||'—'}</span><span class="panel-type">${TYPE_EMOJI[e.type]||'⚠️'} ${e.type}</span></div>
-      <div class="panel-loc">📍 ${e.location}</div>
-      ${e.reporterName?`<div class="panel-loc">👤 ${e.reporterName} · ${e.reporterPhone}</div>`:''}
-    </div>`;
-  }).join('');
+  const emergencyHtml = sorted.length === 0
+    ? '<div class="panel-empty">No emergencies match filters</div>'
+    : sorted.map(e=>{
+        const la=Number(e.latitude),ln=Number(e.longitude),hasCoords=!isNaN(la)&&!isNaN(ln);
+        const pClass=e.priority==='HIGH'?'pb-high':e.priority==='MEDIUM'?'pb-medium':'pb-low';
+        const statusMap={'REPORTED':'s-reported','DISPATCHED':'s-dispatched','IN_PROGRESS':'s-inprogress','RESOLVED':'s-resolved'};
+        return `<div class="panel-item" onclick="${hasCoords?`mapFull.flyTo([${la},${ln}],16)`:''}">
+          <div class="panel-item-top"><span class="priority-badge ${pClass}">${e.priority||'—'}</span><span class="panel-type">${TYPE_EMOJI[e.type]||'⚠️'} ${e.type}</span></div>
+          <div class="panel-loc">📍 ${e.location}</div>
+          <div class="panel-loc"><span class="estatus ${statusMap[e.status]||'s-reported'}">${e.status}</span></div>
+          ${e.reporterName?`<div class="panel-loc">👤 ${e.reporterName}</div>`:''}
+        </div>`;
+      }).join('');
+
+  // Preserve vehicle section at top
+  const vehicleSection = el.querySelector('.vehicle-section');
+  el.innerHTML = (vehicleSection ? vehicleSection.outerHTML : '') +
+    `<div style="padding:8px 4px 4px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px">Emergencies</div>` +
+    `<div id="emergency-panel-inner">${emergencyHtml}</div>`;
 }
 
+// ── CARD RENDERING ────────────────────────────────────
 function priorityClass(p){return p==='HIGH'?'pb-high':p==='MEDIUM'?'pb-medium':'pb-low'}
-function cardClass(e){return e.status==='RESOLVED'?'is-resolved':'p-'+(e.priority||'low').toLowerCase()}
+function cardClass(e){
+  if(e.status==='RESOLVED') return 'is-resolved';
+  return 'p-'+(e.priority||'low').toLowerCase();
+}
 function sortByPriority(arr){return [...arr].sort((a,b)=>{const o={HIGH:0,MEDIUM:1,LOW:2};return (o[a.priority]??3)-(o[b.priority]??3)})}
+
+function statusBadge(status) {
+  const map = {REPORTED:'s-reported',DISPATCHED:'s-dispatched',IN_PROGRESS:'s-inprogress',RESOLVED:'s-resolved'};
+  return `<span class="estatus ${map[status]||'s-reported'}">${status.replace('_',' ')}</span>`;
+}
 
 function cardHTML(e,showLocate=false){
   const la=Number(e.latitude),ln=Number(e.longitude),hasCoords=!isNaN(la)&&!isNaN(ln);
@@ -585,7 +718,7 @@ function cardHTML(e,showLocate=false){
   return `<div class="ecard ${cardClass(e)}" onclick="${hasCoords?`flyToOnDash(${la},${ln})`:''}">
     <div class="ecard-top">
       <span class="etype ${TYPE_CLASS[e.type]||'t-other'}">${emoji} ${e.type}</span>
-      <div class="ecard-badges"><span class="priority-badge ${priorityClass(e.priority)}">${e.priority||'—'}</span><span class="estatus ${e.status==='RESOLVED'?'s-resolved':'s-reported'}">${e.status}</span></div>
+      <div class="ecard-badges"><span class="priority-badge ${priorityClass(e.priority)}">${e.priority||'—'}</span>${statusBadge(e.status)}</div>
     </div>
     <div class="divider"></div>
     ${e.reporterName?`<div class="ereporter">👤 ${e.reporterName} · 📞 ${e.reporterPhone}</div>`:''}
