@@ -489,7 +489,28 @@ function toggleResources(){
 // ── VEHICLE MARKERS ───────────────────────────────────
 let vehicleMarkersDash = {};  // id → L.Marker
 let vehicleMarkersFull = {};  // id → L.Marker
+let routeLayersDash   = {};  // id → L.GeoJSON route polyline on dash map
+let routeLayersFull   = {};  // id → L.GeoJSON route polyline on full map
 let allVehicles = [];
+
+// Route colour per vehicle type
+const ROUTE_COLORS = {AMBULANCE:'#4a9eff',FIRE_TRUCK:'#ff5722',POLICE_CAR:'#1565c0'};
+
+function drawRoute(map, layerStore, vehicle) {
+  if (layerStore[vehicle.id]) { map.removeLayer(layerStore[vehicle.id]); delete layerStore[vehicle.id]; }
+  if (!vehicle.routeGeoJson) return;
+  try {
+    const geom = JSON.parse(vehicle.routeGeoJson);
+    const color = ROUTE_COLORS[vehicle.type] || '#4a9eff';
+    layerStore[vehicle.id] = L.geoJSON(geom, {
+      style: {color, weight:4, opacity:0.7, dashArray:'8 6', lineCap:'round'}
+    }).addTo(map);
+  } catch(e) { console.warn('[Route] parse error', e); }
+}
+
+function clearRoute(map, layerStore, vehicleId) {
+  if (layerStore[vehicleId]) { map.removeLayer(layerStore[vehicleId]); delete layerStore[vehicleId]; }
+}
 
 function renderVehicleMarkersOnDash(vehicles) {
   // Remove stale
@@ -497,6 +518,7 @@ function renderVehicleMarkersOnDash(vehicles) {
     if (!vehicles.find(v => v.id == id)) {
       mapDash.removeLayer(vehicleMarkersDash[id]);
       delete vehicleMarkersDash[id];
+      clearRoute(mapDash, routeLayersDash, id);
     }
   });
   vehicles.forEach(v => {
@@ -505,10 +527,17 @@ function renderVehicleMarkersOnDash(vehicles) {
     if (vehicleMarkersDash[v.id]) {
       vehicleMarkersDash[v.id].setLatLng([v.currentLat, v.currentLng]).setIcon(icon);
     } else {
-      vehicleMarkersDash[v.id] = L.marker([v.currentLat, v.currentLng], {icon, zIndexOffset: 500})
+      vehicleMarkersDash[v.id] = L.marker([v.currentLat, v.currentLng], {icon, zIndexOffset:500})
         .bindPopup(vehiclePopup(v)).addTo(mapDash);
     }
     vehicleMarkersDash[v.id].getPopup()?.setContent(vehiclePopup(v));
+
+    // Route: draw when active, clear when resolved/idle
+    if (v.vehicleStatus === 'DISPATCHED' || v.vehicleStatus === 'IN_PROGRESS') {
+      if (v.routeGeoJson && !routeLayersDash[v.id]) drawRoute(mapDash, routeLayersDash, v);
+    } else {
+      clearRoute(mapDash, routeLayersDash, v.id);
+    }
   });
 }
 
@@ -518,6 +547,7 @@ function renderVehicleMarkersOnFull(vehicles) {
     if (!vlist.find(v => v.id == id)) {
       mapFull.removeLayer(vehicleMarkersFull[id]);
       delete vehicleMarkersFull[id];
+      clearRoute(mapFull, routeLayersFull, id);
     }
   });
   vlist.forEach(v => {
@@ -530,6 +560,13 @@ function renderVehicleMarkersOnFull(vehicles) {
         .bindPopup(vehiclePopup(v)).addTo(mapFull);
     }
     vehicleMarkersFull[v.id].getPopup()?.setContent(vehiclePopup(v));
+
+    // Route: draw when active, clear when resolved/idle
+    if (v.vehicleStatus === 'DISPATCHED' || v.vehicleStatus === 'IN_PROGRESS') {
+      if (v.routeGeoJson && !routeLayersFull[v.id]) drawRoute(mapFull, routeLayersFull, v);
+    } else {
+      clearRoute(mapFull, routeLayersFull, v.id);
+    }
   });
 }
 

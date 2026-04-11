@@ -1,5 +1,7 @@
 package com.parth.emergency_dashboard.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.parth.emergency_dashboard.model.Emergency;
 import com.parth.emergency_dashboard.model.Vehicle;
 import com.parth.emergency_dashboard.repository.EmergencyRepository;
@@ -9,13 +11,16 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.List;
 
 @Service
 public class VehicleSimulationService {
 
     // ── Bhopal resources — mirrors the frontend RESOURCES array ──────────────
-    // Each entry: { name, type, lat, lng }
     private static final double[][] RESOURCES = {
         {23.2599, 77.4664}, // AIIMS Bhopal          — hospital
         {23.2584, 77.4011}, // Hamidia Hospital       — hospital
@@ -38,92 +43,80 @@ public class VehicleSimulationService {
         "police","police","police","police","police"
     };
 
-    // Vehicle type matched to emergency type
-    private static final String vehicleTypeFor(String emergencyType) {
+    private static String vehicleTypeFor(String emergencyType) {
         if (emergencyType == null) return "AMBULANCE";
         return switch (emergencyType.toUpperCase()) {
-            case "FIRE"     -> "FIRE_TRUCK";
-            case "POLICE"   -> "POLICE_CAR";
-            default         -> "AMBULANCE"; // MEDICAL, ACCIDENT, FLOOD, OTHER
+            case "FIRE"   -> "FIRE_TRUCK";
+            case "POLICE" -> "POLICE_CAR";
+            default       -> "AMBULANCE";
         };
     }
 
-    // Resource type matched to vehicle type
-    private static final String resourceTypeFor(String vehicleType) {
+    private static String resourceTypeFor(String vehicleType) {
         return switch (vehicleType) {
-            case "FIRE_TRUCK"  -> "fire";
-            case "POLICE_CAR"  -> "police";
-            default            -> "hospital";
+            case "FIRE_TRUCK" -> "fire";
+            case "POLICE_CAR" -> "police";
+            default           -> "hospital";
         };
     }
 
     /**
-     * Realistic speed: ~60 km/h in degrees/tick (2-second tick).
-     * 60 km/h = 0.01667 km/s = 0.03333 km per 2s tick
-     * 1 degree latitude ≈ 111 km → 0.03333/111 ≈ 0.0003 degrees/tick
-     * This gives ~2 minute travel time across typical Bhopal distances (2-4 km)
+     * Realistic speed ~60 km/h expressed as degrees per 2-second tick.
+     * 60 km/h = 0.03333 km per tick; 1 degree ≈ 111 km → 0.0003 deg/tick.
+     * Gives ~2 min travel time across typical Bhopal distances.
      */
     private static final double STEP = 0.0003;
+    private static final double ARRIVAL_THRESHOLD = 0.0003; // ~33 metres
 
-    /** Arrival threshold in degrees (~33 metres) */
-    private static final double ARRIVAL_THRESHOLD = 0.0003;
+    // OSRM public API — free, no key required, OpenStreetMap data
+    private static final String OSRM_URL =
+        "http://router.project-osrm.org/route/v1/driving/%f,%f;%f,%f?overview=full&geometries=geojson";
 
     private final VehicleRepository vehicleRepo;
     private final EmergencyRepository emergencyRepo;
     private final SimpMessagingTemplate ws;
+    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public VehicleSimulationService(VehicleRepository vehicleRepo,
                                      EmergencyRepository emergencyRepo,
                                      SimpMessagingTemplate ws) {
-        this.vehicleRepo  = vehicleRepo;
+        this.vehicleRepo   = vehicleRepo;
         this.emergencyRepo = emergencyRepo;
-        this.ws           = ws;
+        this.ws            = ws;
     }
 
     // ── Seed 3 idle vehicles on startup ──────────────────────────────────────
     @PostConstruct
     public void seedVehicles() {
-        if (vehicleRepo.count() > 0) return; // already seeded
-
-        createVehicle("Ambulance 1",   "AMBULANCE",   23.2599, 77.4664); // AIIMS
-        createVehicle("Fire Truck 1",  "FIRE_TRUCK",  23.2338, 77.4340); // MP Nagar Fire
-        createVehicle("Police Car 1",  "POLICE_CAR",  23.2320, 77.4310); // MP Nagar Police
+        if (vehicleRepo.count() > 0) return;
+        createVehicle("Ambulance 1",  "AMBULANCE",   23.2599, 77.4664);
+        createVehicle("Fire Truck 1", "FIRE_TRUCK",  23.2338, 77.4340);
+        createVehicle("Police Car 1", "POLICE_CAR",  23.2320, 77.4310);
     }
 
     private void createVehicle(String name, String type, double lat, double lng) {
         Vehicle v = new Vehicle();
-        v.setName(name);
-        v.setType(type);
-        v.setCurrentLat(lat);
-        v.setCurrentLng(lng);
-        v.setHomeLat(lat);
-        v.setHomeLng(lng);
+        v.setName(name); v.setType(type);
+        v.setCurrentLat(lat); v.setCurrentLng(lng);
+        v.setHomeLat(lat);    v.setHomeLng(lng);
         v.setVehicleStatus("IDLE");
         vehicleRepo.save(v);
     }
 
-    // ── Called by EmergencyService when a new emergency is created ────────────
+    // ── Dispatch: called by EmergencyService ──────────────────────────────────
     public void dispatchVehicle(Emergency emergency) {
         if (emergency.getLatitude() == null || emergency.getLongitude() == null) return;
 
         String vehicleType = vehicleTypeFor(emergency.getType());
-
-        // 1. Find an IDLE vehicle of the right type
         List<Vehicle> idle = vehicleRepo.findByTypeAndVehicleStatus(vehicleType, "IDLE");
-
-        // 2. Fall back to any IDLE vehicle if none of the right type
-        if (idle.isEmpty()) {
-            idle = vehicleRepo.findByVehicleStatus("IDLE");
-        }
-        if (idle.isEmpty()) return; // all busy
+        if (idle.isEmpty()) idle = vehicleRepo.findByVehicleStatus("IDLE");
+        if (idle.isEmpty()) return;
 
         Vehicle vehicle = idle.get(0);
-
-        // 3. Find nearest matching resource as the start position
         String resType = resourceTypeFor(vehicleType);
         double[] nearest = nearestResource(emergency.getLatitude(), emergency.getLongitude(), resType);
 
-        // 4. Assign and set to DISPATCHED
         vehicle.setCurrentLat(nearest[0]);
         vehicle.setCurrentLng(nearest[1]);
         vehicle.setHomeLat(nearest[0]);
@@ -132,26 +125,30 @@ public class VehicleSimulationService {
         vehicle.setTargetLng(emergency.getLongitude());
         vehicle.setAssignedEmergencyId(emergency.getId());
         vehicle.setVehicleStatus("DISPATCHED");
+
+        // ── Fetch real road route from OSRM ──────────────────────────────────
+        String geoJson = fetchOsrmRoute(nearest[1], nearest[0],
+                                         emergency.getLongitude(), emergency.getLatitude());
+        vehicle.setRouteGeoJson(geoJson); // null if OSRM unavailable — frontend falls back gracefully
+        // ─────────────────────────────────────────────────────────────────────
+
         vehicleRepo.save(vehicle);
 
-        // 5. Update emergency status to DISPATCHED
         emergency.setStatus("DISPATCHED");
         emergencyRepo.save(emergency);
 
         broadcastAll();
     }
 
-    // ── Tick: runs every 2 seconds ────────────────────────────────────────────
+    // ── Tick: moves vehicles every 2 seconds ──────────────────────────────────
     @Scheduled(fixedDelay = 2000)
     public void tick() {
         List<Vehicle> active = vehicleRepo.findAll().stream()
                 .filter(v -> !"IDLE".equals(v.getVehicleStatus()))
                 .toList();
-
         if (active.isEmpty()) return;
 
         boolean anyMoved = false;
-
         for (Vehicle v : active) {
             if (v.getTargetLat() == null || v.getTargetLng() == null) continue;
 
@@ -160,36 +157,31 @@ public class VehicleSimulationService {
             double dist = Math.sqrt(dLat * dLat + dLng * dLng);
 
             if (dist <= ARRIVAL_THRESHOLD) {
-                // Arrived
                 handleArrival(v);
             } else {
-                // Move one step toward target
                 double ratio = STEP / dist;
                 v.setCurrentLat(v.getCurrentLat() + dLat * ratio);
                 v.setCurrentLng(v.getCurrentLng() + dLng * ratio);
 
-                // Transition DISPATCHED → IN_PROGRESS once within ~500m
+                // DISPATCHED → IN_PROGRESS when within ~500m
                 if ("DISPATCHED".equals(v.getVehicleStatus()) && dist < 0.005) {
                     v.setVehicleStatus("IN_PROGRESS");
                     updateEmergencyStatus(v.getAssignedEmergencyId(), "IN_PROGRESS");
                 }
-
                 vehicleRepo.save(v);
                 anyMoved = true;
             }
         }
-
         if (anyMoved) broadcastAll();
     }
 
     private void handleArrival(Vehicle v) {
-        // Snap to exact target
         v.setCurrentLat(v.getTargetLat());
         v.setCurrentLng(v.getTargetLng());
         v.setVehicleStatus("RESOLVED");
+        v.setRouteGeoJson(null); // clear route on arrival
         vehicleRepo.save(v);
 
-        // Mark emergency RESOLVED
         updateEmergencyStatus(v.getAssignedEmergencyId(), "RESOLVED");
 
         // Reset vehicle to IDLE at home after 10 seconds
@@ -202,6 +194,7 @@ public class VehicleSimulationService {
                 fresh.setAssignedEmergencyId(null);
                 fresh.setTargetLat(null);
                 fresh.setTargetLng(null);
+                fresh.setRouteGeoJson(null);
                 vehicleRepo.save(fresh);
                 broadcastAll();
             });
@@ -215,7 +208,6 @@ public class VehicleSimulationService {
         emergencyRepo.findById(emergencyId).ifPresent(e -> {
             e.setStatus(status);
             emergencyRepo.save(e);
-            // Broadcast emergency update so customer page gets status changes
             ws.convertAndSend("/topic/emergencies", e);
             ws.convertAndSend("/topic/track/" + e.getTrackingId(), e);
         });
@@ -225,11 +217,55 @@ public class VehicleSimulationService {
         ws.convertAndSend("/topic/vehicles", vehicleRepo.findAll());
     }
 
-    // ── Nearest resource of the given type to a lat/lng ───────────────────────
+    // ── OSRM route fetch ──────────────────────────────────────────────────────
+    /**
+     * Calls the free OSRM public API for a driving route.
+     * Returns a GeoJSON LineString string, or null on failure.
+     * The frontend receives this in the vehicle payload and draws it
+     * with L.geoJSON() — no extra API calls needed from the browser.
+     *
+     * OSRM expects coordinates as lng,lat (not lat,lng).
+     */
+    private String fetchOsrmRoute(double fromLng, double fromLat,
+                                   double toLng,   double toLat) {
+        try {
+            String url = String.format(OSRM_URL, fromLng, fromLat, toLng, toLat);
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .header("Accept", "application/json")
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request,
+                    HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                System.err.println("[OSRM] HTTP " + response.statusCode());
+                return null;
+            }
+
+            JsonNode root = objectMapper.readTree(response.body());
+            JsonNode geometry = root.path("routes").path(0).path("geometry");
+
+            if (geometry.isMissingNode()) {
+                System.err.println("[OSRM] No route geometry in response");
+                return null;
+            }
+
+            // Return just the geometry node as a JSON string
+            // Frontend wraps it in a GeoJSON feature for L.geoJSON()
+            return objectMapper.writeValueAsString(geometry);
+
+        } catch (Exception e) {
+            System.err.println("[OSRM] Route fetch failed: " + e.getMessage());
+            return null; // app continues without route — vehicle still moves
+        }
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
     private double[] nearestResource(double lat, double lng, String type) {
         double bestDist = Double.MAX_VALUE;
-        double[] best = {23.2599, 77.4126}; // fallback: city centre
-
+        double[] best = {23.2599, 77.4126};
         for (int i = 0; i < RESOURCES.length; i++) {
             if (!RESOURCE_TYPES[i].equals(type)) continue;
             double d = haversine(lat, lng, RESOURCES[i][0], RESOURCES[i][1]);
@@ -247,7 +283,5 @@ public class VehicleSimulationService {
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    public List<Vehicle> getAllVehicles() {
-        return vehicleRepo.findAll();
-    }
+    public List<Vehicle> getAllVehicles() { return vehicleRepo.findAll(); }
 }

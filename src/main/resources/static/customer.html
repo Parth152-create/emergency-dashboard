@@ -25,133 +25,124 @@
     }
     html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;transition:background .25s,color .25s}
 
-    /* NAV */
-    .topnav{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100}
-    .nav-logo{display:flex;align-items:center;gap:10px}
-    .nav-logo-icon{width:30px;height:30px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px}
-    .nav-logo-name{font-size:15px;font-weight:600;letter-spacing:.5px}
-    .nav-tabs{display:flex;gap:4px;margin-left:24px}
-    .nav-tab{padding:6px 16px;border-radius:20px;font-size:13px;color:var(--muted);cursor:pointer;transition:.15s;border:1px solid transparent;user-select:none}
+    /* ── NAV ── */
+    .topnav{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;flex-wrap:wrap}
+    .nav-logo{display:flex;align-items:center;gap:8px;flex-shrink:0}
+    .nav-logo-icon{width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+    .nav-logo-name{font-size:14px;font-weight:600;letter-spacing:.5px}
+    .nav-tabs{display:flex;gap:3px;flex-wrap:wrap}
+    .nav-tab{padding:5px 12px;border-radius:20px;font-size:12px;color:var(--muted);cursor:pointer;transition:.15s;border:1px solid transparent;user-select:none;white-space:nowrap}
     .nav-tab:hover{background:var(--bg3);color:var(--text)}
     .nav-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-    .nav-spacer{flex:1}
-    .nav-btn{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 13px;color:var(--text);font-size:12px;cursor:pointer;font-family:var(--font);transition:.15s}
+    .nav-spacer{flex:1;min-width:8px}
+    .nav-btn{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:5px 11px;color:var(--text);font-size:11px;cursor:pointer;font-family:var(--font);transition:.15s;flex-shrink:0}
     .nav-btn:hover{background:var(--border)}
 
-    /* VIEWS */
-    .view{display:none;max-width:600px;margin:0 auto;padding:28px 16px 60px}
+    /* ── VIEWS ── */
+    .view{display:none;max-width:580px;margin:0 auto;padding:24px 14px 70px}
     .view.active{display:block}
-    .view-map{display:none;height:calc(100vh - 57px);flex-direction:column}
+    .view-map{display:none;height:calc(100vh - 53px);flex-direction:column}
     .view-map.active{display:flex}
 
-    /* HERO */
-    .hero{text-align:center;margin-bottom:28px}
-    .hero-icon{font-size:42px;margin-bottom:10px}
-    .hero-title{font-size:22px;font-weight:600;margin-bottom:6px}
-    .hero-sub{font-size:13px;color:var(--muted);line-height:1.6}
+    /* ── HERO ── */
+    .hero{text-align:center;margin-bottom:24px}
+    .hero-icon{font-size:38px;margin-bottom:8px;display:block}
+    .hero-title{font-size:20px;font-weight:600;margin-bottom:5px}
+    .hero-sub{font-size:13px;color:var(--muted);line-height:1.6;max-width:360px;margin:0 auto}
 
-    /* CARD */
-    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:16px}
-    .card-hdr{padding:15px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
-    .card-title{font-size:14px;font-weight:600}
-    .card-body{padding:20px}
+    /* ── CARD ── */
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:14px;transition:border-color .2s}
+    .card-hdr{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+    .card-title{font-size:13px;font-weight:600}
+    .card-body{padding:18px}
 
-    /* FORM */
-    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
-    .form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+    /* ── FORM ── */
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:13px}
+    .form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
     .form-group:last-child{margin-bottom:0}
-    .form-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-    .form-input,.form-select{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;width:100%;transition:border-color .15s}
-    .form-input:focus,.form-select:focus{border-color:var(--accent)}
+    .form-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:4px}
+    .form-label .req{color:var(--accent);font-size:10px}
+    .form-input,.form-select{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;width:100%;transition:border-color .15s,box-shadow .15s}
+    .form-input:focus,.form-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(229,57,53,.1)}
+    .form-input.error,.form-select.error{border-color:var(--accent)}
+    .form-input.ok{border-color:var(--success)}
     .form-select option{background:var(--bg2)}
     .form-input::placeholder{color:var(--muted)}
-    .form-textarea{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;width:100%;transition:border-color .15s;resize:vertical;min-height:80px}
-    .form-textarea:focus{border-color:var(--accent)}
+    .field-error{font-size:11px;color:var(--accent);margin-top:3px;display:none}
+    .field-error.show{display:block}
+    .form-textarea{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;width:100%;transition:border-color .15s,box-shadow .15s;resize:vertical;min-height:80px}
+    .form-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(229,57,53,.1)}
     .form-textarea::placeholder{color:var(--muted)}
+    .char-count{font-size:11px;color:var(--muted);text-align:right;margin-top:3px}
 
-    /* MAP IN FORM */
-    #report-map{height:200px;border-radius:8px;margin-bottom:10px;border:1px solid var(--border)}
-    .map-hint{font-size:12px;color:var(--muted);text-align:center;margin-bottom:10px}
+    /* ── MAP IN FORM ── */
+    #report-map{height:190px;border-radius:8px;margin-bottom:8px;border:1px solid var(--border)}
+    .map-hint{font-size:12px;color:var(--muted);text-align:center;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:5px}
+    .map-hint-dot{width:6px;height:6px;border-radius:50%;background:var(--border2);display:inline-block}
     .coord-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end}
-    .loc-btn{background:var(--info);border:none;border-radius:8px;padding:10px 13px;color:#fff;font-family:var(--font);font-size:12px;cursor:pointer;white-space:nowrap}
+    .loc-btn{background:var(--info);border:none;border-radius:8px;padding:10px 13px;color:#fff;font-family:var(--font);font-size:12px;cursor:pointer;white-space:nowrap;transition:.15s;display:flex;align-items:center;gap:5px}
     .loc-btn:hover{opacity:.85}
+    .loc-btn:disabled{opacity:.5;cursor:not-allowed}
+    .coord-pinned{font-size:11px;color:var(--success);margin-top:5px;display:none;align-items:center;gap:4px}
+    .coord-pinned.show{display:flex}
 
-    /* BUTTONS */
-    .submit-btn{width:100%;background:var(--accent);border:none;border-radius:10px;padding:13px;color:#fff;font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;transition:.15s;margin-top:4px}
-    .submit-btn:hover{opacity:.9}
-    .verify-btn{width:100%;background:var(--info);border:none;border-radius:10px;padding:12px;color:#fff;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
-    .verify-btn:hover{opacity:.9}
-    .verify-btn:disabled{opacity:.5;cursor:not-allowed}
+    /* ── BUTTONS ── */
+    .submit-btn{width:100%;background:var(--accent);border:none;border-radius:10px;padding:13px;color:#fff;font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;transition:.15s;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px;position:relative}
+    .submit-btn:hover:not(:disabled){opacity:.9;transform:translateY(-1px)}
+    .submit-btn:active:not(:disabled){transform:translateY(0)}
+    .submit-btn:disabled{opacity:.65;cursor:not-allowed;transform:none}
+    .verify-btn{width:100%;background:var(--info);border:none;border-radius:10px;padding:12px;color:#fff;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:8px}
+    .verify-btn:hover:not(:disabled){opacity:.9}
+    .verify-btn:disabled{opacity:.55;cursor:not-allowed}
 
-    /* ALERT */
-    .alert{border-radius:8px;padding:11px 14px;font-size:13px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
-    .alert-error{background:rgba(229,57,53,.1);border:1px solid rgba(229,57,53,.3);color:var(--accent)}
-    .alert-success{background:rgba(26,170,114,.1);border:1px solid rgba(26,170,114,.3);color:var(--success)}
+    /* ── SPINNER ── */
+    .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+    @keyframes spin{to{transform:rotate(360deg)}}
 
-    /* SUCCESS STATE */
-    .success-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:16px}
-    .success-hdr{background:var(--success);padding:28px 24px;text-align:center}
-    .success-icon{font-size:40px;margin-bottom:8px}
-    .success-title{font-size:17px;font-weight:600;color:#fff;margin-bottom:4px}
-    .success-sub{font-size:13px;color:rgba(255,255,255,.8)}
-    .success-body{padding:24px}
-    .tid-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;text-align:center}
-    .tid-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-    .tid-val{font-family:var(--mono);font-size:24px;font-weight:500;color:var(--accent);letter-spacing:3px}
-    .tid-sub{font-size:12px;color:var(--muted);margin-top:4px}
-    .status-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;text-align:center}
-    .status-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
-    .status-pill{display:inline-block;padding:6px 20px;border-radius:20px;font-size:13px;font-weight:600}
+    /* ── INLINE FORM ALERT ── */
+    .form-alert{border-radius:8px;padding:10px 13px;font-size:13px;margin-bottom:12px;display:none;align-items:flex-start;gap:8px;line-height:1.5}
+    .form-alert.show{display:flex}
+    .form-alert-error{background:rgba(229,57,53,.08);border:1px solid rgba(229,57,53,.25);color:var(--accent)}
+    .form-alert-success{background:rgba(26,170,114,.08);border:1px solid rgba(26,170,114,.25);color:var(--success)}
+    .form-alert-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+
+    /* ── SUCCESS STATE ── */
+    .success-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:14px;animation:slideUp .35s cubic-bezier(.34,1.2,.64,1)}
+    @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    .success-hdr{background:var(--success);padding:26px 22px;text-align:center}
+    .success-icon{font-size:38px;margin-bottom:8px;display:block;animation:pop .4s cubic-bezier(.34,1.56,.64,1) .1s both}
+    @keyframes pop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+    .success-title{font-size:16px;font-weight:600;color:#fff;margin-bottom:3px}
+    .success-sub{font-size:12px;color:rgba(255,255,255,.8)}
+    .success-body{padding:20px}
+    .tid-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;text-align:center}
+    .tid-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+    .tid-val{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--accent);letter-spacing:3px}
+    .tid-sub{font-size:11px;color:var(--muted);margin-top:3px}
+    .tid-copy{display:inline-flex;align-items:center;gap:4px;margin-top:8px;font-size:11px;color:var(--info);cursor:pointer;padding:3px 8px;border-radius:6px;border:1px solid rgba(74,158,255,.2);background:rgba(74,158,255,.05);transition:.15s}
+    .tid-copy:hover{background:rgba(74,158,255,.1)}
+    .status-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:13px;margin-bottom:14px;text-align:center}
+    .status-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
+    .status-pill{display:inline-block;padding:5px 18px;border-radius:20px;font-size:12px;font-weight:600}
     .status-pill.active{background:rgba(229,57,53,.15);color:var(--accent)}
+    .status-pill.dispatched{background:rgba(74,158,255,.15);color:var(--info)}
+    .status-pill.inprogress{background:rgba(156,39,176,.15);color:#b06fff}
     .status-pill.resolved{background:rgba(26,170,114,.15);color:var(--success)}
-    .ws-live{font-size:12px;color:var(--success);margin-top:8px;animation:pulse 2s infinite}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-    .another-btn{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 20px;color:var(--text);font-family:var(--font);font-size:13px;cursor:pointer;width:100%}
+    .ws-live{font-size:11px;color:var(--success);margin-top:7px;display:flex;align-items:center;justify-content:center;gap:5px}
+    .ws-live-dot{width:6px;height:6px;border-radius:50%;background:var(--success);animation:pulse 2s infinite;flex-shrink:0}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+    .another-btn{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 20px;color:var(--text);font-family:var(--font);font-size:13px;cursor:pointer;width:100%;transition:.15s}
     .another-btn:hover{background:var(--border)}
 
-    /* VERIFIED REPORT CARD */
-    .verified-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-top:16px}
-    .verified-hdr{background:var(--info);padding:16px 20px;display:flex;align-items:center;gap:10px}
-    .verified-hdr-title{font-size:15px;font-weight:600;color:#fff}
-    .verified-hdr-sub{font-size:12px;color:rgba(255,255,255,.8)}
-    .verified-body{padding:20px}
-    .vfield{margin-bottom:12px}
-    .vfield-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
-    .vfield-val{font-size:14px;font-weight:500}
-    .vfield-mono{font-family:var(--mono);font-size:13px;color:var(--accent)}
-    .priority-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;text-transform:uppercase}
-    .pb-high{background:rgba(229,57,53,.15);color:var(--high)}
-    .pb-medium{background:rgba(244,166,35,.15);color:var(--medium)}
-    .pb-low{background:rgba(26,170,114,.15);color:var(--low)}
+    /* ── PRIORITY BOX ── */
+    .priority-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:13px;margin-bottom:14px;text-align:center}
 
-    /* RESOURCES VIEW */
-    .res-toolbar{padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex-shrink:0}
-    .res-legend{display:flex;gap:14px;flex:1;flex-wrap:wrap}
-    .legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
-    .legend-sq{width:12px;height:12px;border-radius:3px}
-    .res-filter-btns{display:flex;gap:6px}
-    .r-btn{padding:5px 13px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--font);font-size:12px;cursor:pointer;transition:.15s}
-    .r-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
-    .r-btn:hover:not(.active){border-color:var(--border2);color:var(--text)}
-    #res-map{flex:1}
-    .nearest-panel{background:var(--bg2);border-top:1px solid var(--border);padding:14px 16px;max-height:220px;overflow-y:auto;flex-shrink:0}
-    .nearest-title{font-size:13px;font-weight:600;margin-bottom:10px}
-    .nearest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
-    .nearest-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;transition:.15s}
-    .nearest-card:hover{border-color:var(--border2);transform:translateY(-1px)}
-    .nearest-name{font-size:12px;font-weight:600;margin-bottom:3px}
-    .nearest-dist{font-size:11px;color:var(--muted)}
-    .nearest-type-badge{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500;margin-top:5px;display:inline-block}
-    .nb-hospital{background:rgba(233,30,99,.15);color:#e91e63}
-    .nb-fire{background:rgba(255,87,34,.15);color:#ff5722}
-    .nb-police{background:rgba(21,101,192,.15);color:#1565c0}
-
-    /* VEHICLE TRACKER */
-    .vehicle-tracker{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px}
+    /* ── VEHICLE TRACKER ── */
+    .vehicle-tracker{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:13px;margin-bottom:14px}
     .vehicle-tracker-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
     .vehicle-row{display:flex;align-items:center;gap:12px}
     .vehicle-emoji{font-size:26px;flex-shrink:0}
-    .vehicle-detail{flex:1}
+    .vehicle-detail{flex:1;min-width:0}
     .vehicle-name-text{font-size:13px;font-weight:600;margin-bottom:4px}
     .vehicle-status-pill{font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;text-transform:uppercase;display:inline-block}
     .vp-idle{background:rgba(122,133,160,.15);color:var(--muted)}
@@ -160,7 +151,72 @@
     .vp-resolved{background:rgba(26,170,114,.15);color:var(--success)}
     .vehicle-eta{font-size:11px;color:var(--muted);margin-top:4px}
 
+    /* ── VERIFIED REPORT CARD ── */
+    .verified-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-top:14px;animation:slideUp .3s ease both}
+    .verified-hdr{background:var(--info);padding:14px 18px;display:flex;align-items:center;gap:10px}
+    .verified-hdr-title{font-size:14px;font-weight:600;color:#fff}
+    .verified-hdr-sub{font-size:11px;color:rgba(255,255,255,.8)}
+    .verified-body{padding:18px}
+    .vfield{margin-bottom:11px}
+    .vfield-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+    .vfield-val{font-size:14px;font-weight:500}
+    .vfield-mono{font-family:var(--mono);font-size:13px;color:var(--accent)}
+    .priority-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;text-transform:uppercase}
+    .pb-high{background:rgba(229,57,53,.15);color:var(--high)}
+    .pb-medium{background:rgba(244,166,35,.15);color:var(--medium)}
+    .pb-low{background:rgba(26,170,114,.15);color:var(--low)}
+    .vr-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:13px}
+
+    /* ── RESOURCES VIEW ── */
+    .res-toolbar{padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex-shrink:0}
+    .res-legend{display:flex;gap:12px;flex:1;flex-wrap:wrap}
+    .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+    .legend-sq{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+    .res-filter-btns{display:flex;gap:5px;flex-wrap:wrap}
+    .r-btn{padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--font);font-size:12px;cursor:pointer;transition:.15s}
+    .r-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+    .r-btn:hover:not(.active){border-color:var(--border2);color:var(--text)}
+    #res-map{flex:1;min-height:0}
+    .nearest-panel{background:var(--bg2);border-top:1px solid var(--border);padding:12px 14px;max-height:200px;overflow-y:auto;flex-shrink:0}
+    .nearest-title{font-size:12px;font-weight:600;margin-bottom:8px}
+    .nearest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:7px}
+    .nearest-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 11px;cursor:pointer;transition:.15s}
+    .nearest-card:hover{border-color:var(--border2);transform:translateY(-1px)}
+    .nearest-name{font-size:12px;font-weight:600;margin-bottom:2px}
+    .nearest-dist{font-size:11px;color:var(--muted)}
+    .nearest-type-badge{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500;margin-top:4px;display:inline-block}
+    .nb-hospital{background:rgba(233,30,99,.15);color:#e91e63}
+    .nb-fire{background:rgba(255,87,34,.15);color:#ff5722}
+    .nb-police{background:rgba(21,101,192,.15);color:#1565c0}
+    .nearest-empty{color:var(--muted);font-size:13px;padding:12px 0;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+    .nearest-empty-icon{font-size:24px;opacity:.4}
+
+    /* ── SCROLLBAR ── */
     ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+    /* ── MOBILE ── */
+    @media(max-width:520px){
+      .topnav{padding:8px 12px;gap:8px}
+      .nav-tabs{margin-left:0;gap:2px}
+      .nav-tab{padding:4px 9px;font-size:11px}
+      .nav-logo-name{display:none}
+      .view{padding:16px 12px 60px}
+      .hero-icon{font-size:32px}
+      .hero-title{font-size:18px}
+      .form-row{grid-template-columns:1fr}
+      .coord-row{grid-template-columns:1fr 1fr;grid-template-rows:auto auto}
+      .loc-btn{grid-column:1/-1}
+      #report-map{height:160px}
+      .tid-val{font-size:18px;letter-spacing:2px}
+      .vr-grid{grid-template-columns:1fr}
+      .res-toolbar{gap:8px}
+      .nearest-grid{grid-template-columns:1fr 1fr}
+      .nearest-panel{max-height:160px}
+    }
+    @media(max-width:360px){
+      .nav-tab{padding:4px 7px;font-size:10px}
+      .nearest-grid{grid-template-columns:1fr}
+    }
   </style>
 </head>
 <body>
@@ -182,7 +238,7 @@
 <!-- ── TAB: REPORT ── -->
 <div class="view active" id="tab-report">
   <div class="hero">
-    <div class="hero-icon">🆘</div>
+    <span class="hero-icon">🆘</span>
     <div class="hero-title">Report an Emergency</div>
     <div class="hero-sub">Your report goes directly to emergency responders in real-time</div>
   </div>
@@ -190,19 +246,29 @@
   <div class="card" id="report-form-card">
     <div class="card-hdr"><span>📋</span><div class="card-title">Emergency Details</div></div>
     <div class="card-body">
+
+      <!-- Inline form error banner -->
+      <div class="form-alert form-alert-error" id="form-alert">
+        <span class="form-alert-icon">⚠️</span>
+        <span id="form-alert-msg">Please fill in all required fields.</span>
+      </div>
+
       <div class="form-row">
         <div class="form-group" style="margin-bottom:0">
-          <div class="form-label">Your name *</div>
-          <input id="r-name" class="form-input" placeholder="Full name"/>
+          <div class="form-label">Your name <span class="req">*</span></div>
+          <input id="r-name" class="form-input" placeholder="Full name" autocomplete="name"/>
+          <div class="field-error" id="err-name">Name is required</div>
         </div>
         <div class="form-group" style="margin-bottom:0">
-          <div class="form-label">Phone number *</div>
-          <input id="r-phone" class="form-input" placeholder="+91 XXXXX XXXXX" type="tel"/>
+          <div class="form-label">Phone number <span class="req">*</span></div>
+          <input id="r-phone" class="form-input" placeholder="+91 XXXXX XXXXX" type="tel" autocomplete="tel"/>
+          <div class="field-error" id="err-phone">Phone number is required</div>
         </div>
       </div>
+
       <div class="form-row">
         <div class="form-group" style="margin-bottom:0">
-          <div class="form-label">Emergency type *</div>
+          <div class="form-label">Emergency type <span class="req">*</span></div>
           <select id="r-type" class="form-select">
             <option value="">— Select type —</option>
             <option value="FIRE">🔥 Fire</option>
@@ -212,34 +278,44 @@
             <option value="FLOOD">🌊 Flood</option>
             <option value="OTHER">⚠️ Other</option>
           </select>
+          <div class="field-error" id="err-type">Please select an emergency type</div>
         </div>
         <div class="form-group" style="margin-bottom:0">
-          <div class="form-label">Location description *</div>
+          <div class="form-label">Location description <span class="req">*</span></div>
           <input id="r-loc" class="form-input" placeholder="e.g. Near DB Mall"/>
+          <div class="field-error" id="err-loc">Location is required</div>
         </div>
       </div>
+
       <div class="form-group">
-        <div class="form-label">Describe the situation</div>
-        <textarea id="r-desc" class="form-textarea" placeholder="Briefly describe what's happening..."></textarea>
+        <div class="form-label">Describe the situation <span style="color:var(--muted);text-transform:none;letter-spacing:0;font-size:10px;font-weight:400">(helps AI prioritise faster)</span></div>
+        <textarea id="r-desc" class="form-textarea" placeholder="Briefly describe what's happening — number of people, injuries, fire size…" maxlength="400" oninput="updateCharCount(this,'desc-count',400)"></textarea>
+        <div class="char-count" id="desc-count">0 / 400</div>
       </div>
+
       <div class="form-group">
-        <div class="form-label">Pin your location <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;font-size:11px">(tap map to mark)</span></div>
+        <div class="form-label">Pin your location <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;font-size:11px">(tap map or use GPS)</span></div>
         <div id="report-map"></div>
-        <div class="map-hint">or use GPS</div>
+        <div class="map-hint"><span class="map-hint-dot"></span> Tap anywhere on the map to pin your location</div>
         <div class="coord-row">
-          <input id="r-lat" class="form-input" placeholder="Latitude" type="number" step="any" readonly/>
-          <input id="r-lng" class="form-input" placeholder="Longitude" type="number" step="any" readonly/>
-          <button class="loc-btn" onclick="useMyLocation()">📡 GPS</button>
+          <input id="r-lat" class="form-input" placeholder="Latitude" type="number" step="any" readonly style="font-size:12px;font-family:var(--mono)"/>
+          <input id="r-lng" class="form-input" placeholder="Longitude" type="number" step="any" readonly style="font-size:12px;font-family:var(--mono)"/>
+          <button class="loc-btn" id="gps-btn" onclick="useMyLocation()">📡 GPS</button>
         </div>
+        <div class="coord-pinned" id="coord-pinned">✅ Location pinned — vehicle will be dispatched to this point</div>
       </div>
-      <button class="submit-btn" onclick="submitReport()">🚨 Report Emergency</button>
+
+      <button class="submit-btn" id="submit-btn" onclick="submitReport()">
+        <span id="submit-icon">🚨</span>
+        <span id="submit-text">Report Emergency</span>
+      </button>
     </div>
   </div>
 
   <!-- SUCCESS STATE -->
   <div class="success-card" id="success-card" style="display:none">
     <div class="success-hdr">
-      <div class="success-icon">✅</div>
+      <span class="success-icon">✅</span>
       <div class="success-title">Emergency Reported!</div>
       <div class="success-sub">Responders have been notified immediately</div>
     </div>
@@ -247,17 +323,18 @@
       <div class="tid-box">
         <div class="tid-label">Your tracking ID</div>
         <div class="tid-val" id="disp-tid">—</div>
-        <div class="tid-sub">Use this + your name & phone to track your case</div>
+        <div class="tid-sub">Save this — you'll need it to track your case</div>
+        <div class="tid-copy" onclick="copyTrackingId()">📋 Copy ID</div>
       </div>
 
-      <!-- ── AI PRIORITY BOX (hidden until response comes back) ── -->
-      <div class="status-box" id="priority-box" style="display:none">
+      <!-- AI priority box -->
+      <div class="priority-box status-box" id="priority-box" style="display:none">
         <div class="status-label">🤖 AI-assigned priority</div>
         <div id="disp-priority"></div>
-        <div style="font-size:11px;color:var(--muted);margin-top:6px">Automatically classified based on your report</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:5px">Automatically classified based on your report</div>
       </div>
 
-      <!-- ── VEHICLE TRACKER ── -->
+      <!-- Vehicle tracker -->
       <div class="vehicle-tracker" id="vehicle-tracker" style="display:none">
         <div class="vehicle-tracker-label">🚨 Responder dispatched</div>
         <div class="vehicle-row">
@@ -273,9 +350,12 @@
       <div class="status-box">
         <div class="status-label">Current status</div>
         <div><span class="status-pill active" id="disp-status">🔴 REPORTED</span></div>
-        <div class="ws-live" id="ws-live-msg">⚡ Listening for updates...</div>
+        <div class="ws-live" id="ws-live-msg">
+          <span class="ws-live-dot"></span> Listening for live updates…
+        </div>
       </div>
-      <button class="another-btn" onclick="reportAnother()">+ Report another emergency</button>
+
+      <button class="another-btn" onclick="reportAnother()">＋ Report another emergency</button>
     </div>
   </div>
 </div>
@@ -283,33 +363,40 @@
 <!-- ── TAB: TRACK ── -->
 <div class="view" id="tab-track">
   <div class="hero">
-    <div class="hero-icon">🔎</div>
+    <span class="hero-icon">🔎</span>
     <div class="hero-title">Track your Emergency</div>
-    <div class="hero-sub">Enter your tracking ID along with the name and phone you used when reporting</div>
+    <div class="hero-sub">Enter your tracking ID with the name and phone you used when reporting</div>
   </div>
 
-  <!-- VERIFY FORM -->
   <div class="card" id="verify-form-card">
     <div class="card-hdr"><span>🔐</span><div class="card-title">Verify Your Identity</div></div>
     <div class="card-body">
       <div class="form-group">
-        <div class="form-label">Tracking ID *</div>
-        <input id="v-tid" class="form-input" placeholder="e.g. TRK-A3F9X2" style="font-family:var(--mono);letter-spacing:1px"/>
+        <div class="form-label">Tracking ID <span class="req">*</span></div>
+        <input id="v-tid" class="form-input" placeholder="TRK-XXXXXX" style="font-family:var(--mono);letter-spacing:1px;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"/>
       </div>
       <div class="form-row">
         <div class="form-group" style="margin-bottom:0">
-          <div class="form-label">Your name *</div>
-          <input id="v-name" class="form-input" placeholder="Full name (as reported)"/>
+          <div class="form-label">Your name <span class="req">*</span></div>
+          <input id="v-name" class="form-input" placeholder="As reported"/>
         </div>
         <div class="form-group" style="margin-bottom:0">
-          <div class="form-label">Phone number *</div>
+          <div class="form-label">Phone number <span class="req">*</span></div>
           <input id="v-phone" class="form-input" placeholder="+91 XXXXX XXXXX" type="tel"/>
         </div>
       </div>
-      <div id="verify-alert" style="display:none;margin-top:14px"></div>
-      <button class="verify-btn" id="verify-btn" onclick="verifyAndTrack()" style="margin-top:14px">🔍 Verify & Track</button>
-      <p style="font-size:12px;color:var(--muted);margin-top:10px;text-align:center">
-        Your name and phone must match what you provided when reporting
+
+      <div class="form-alert" id="verify-alert" style="margin-top:13px">
+        <span class="form-alert-icon" id="verify-alert-icon">⚠️</span>
+        <span id="verify-alert-msg"></span>
+      </div>
+
+      <button class="verify-btn" id="verify-btn" onclick="verifyAndTrack()" style="margin-top:14px">
+        <span id="verify-icon">🔍</span>
+        <span id="verify-text">Verify &amp; Track</span>
+      </button>
+      <p style="font-size:11px;color:var(--muted);margin-top:10px;text-align:center;line-height:1.6">
+        Name and phone must match exactly what you provided when reporting
       </p>
     </div>
   </div>
@@ -318,14 +405,14 @@
   <div id="verified-result" style="display:none">
     <div class="verified-card">
       <div class="verified-hdr">
-        <span style="font-size:22px">✅</span>
+        <span style="font-size:20px">✅</span>
         <div>
           <div class="verified-hdr-title">Identity Verified</div>
           <div class="verified-hdr-sub">Here are your emergency details</div>
         </div>
       </div>
       <div class="verified-body">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div class="vr-grid">
           <div class="vfield">
             <div class="vfield-label">Type</div>
             <div class="vfield-val" id="vr-type">—</div>
@@ -347,10 +434,12 @@
           <div class="vfield-label">Location</div>
           <div class="vfield-val" id="vr-loc">—</div>
         </div>
-        <div class="status-box" style="margin-top:14px">
+        <div class="status-box" style="margin-top:13px">
           <div class="status-label">Live status</div>
           <div><span class="status-pill active" id="vr-live-status">🔴 REPORTED</span></div>
-          <div class="ws-live" id="vr-ws-msg">⚡ Listening for real-time updates...</div>
+          <div class="ws-live" id="vr-ws-msg">
+            <span class="ws-live-dot"></span> Listening for real-time updates…
+          </div>
         </div>
         <button class="another-btn" onclick="resetTrack()" style="margin-top:4px">← Track another</button>
       </div>
@@ -369,9 +458,9 @@
     </div>
     <div class="res-filter-btns">
       <button class="r-btn active" onclick="filterResources('all',this)">All</button>
-      <button class="r-btn" onclick="filterResources('hospital',this)">🏥 Hospitals</button>
-      <button class="r-btn" onclick="filterResources('fire',this)">🚒 Fire</button>
-      <button class="r-btn" onclick="filterResources('police',this)">🚔 Police</button>
+      <button class="r-btn" onclick="filterResources('hospital',this)">🏥</button>
+      <button class="r-btn" onclick="filterResources('fire',this)">🚒</button>
+      <button class="r-btn" onclick="filterResources('police',this)">🚔</button>
       <button class="r-btn" onclick="myLocationOnResMap()" style="background:rgba(156,39,176,.15);border-color:rgba(156,39,176,.4);color:#9c27b0">📡 My Location</button>
     </div>
   </div>
@@ -379,7 +468,10 @@
   <div class="nearest-panel">
     <div class="nearest-title">📍 Nearest Resources</div>
     <div class="nearest-grid" id="nearest-grid">
-      <div style="color:var(--muted);font-size:13px">Click "📡 My Location" to see nearest resources</div>
+      <div class="nearest-empty">
+        <span class="nearest-empty-icon">📡</span>
+        <span>Tap "My Location" to find nearest resources</span>
+      </div>
     </div>
   </div>
 </div>
@@ -410,9 +502,9 @@ const RES_COLORS={hospital:'#e91e63',fire:'#ff5722',police:'#1565c0'};
 const RES_EMOJI={hospital:'🏥',fire:'🚒',police:'🚔'};
 
 function resIcon(r,highlight=false){
-  const size=highlight?36:28;
+  const size=highlight?34:26;
   return L.divIcon({className:'',
-    html:`<div style="background:${RES_COLORS[r.type]};width:${size}px;height:${size}px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:${highlight?18:14}px;border:${highlight?'3px':'2px'} solid rgba(255,255,255,.9);box-shadow:0 2px ${highlight?12:6}px rgba(0,0,0,.4)">${RES_EMOJI[r.type]}</div>`,
+    html:`<div style="background:${RES_COLORS[r.type]};width:${size}px;height:${size}px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:${highlight?16:13}px;border:${highlight?'3px':'2px'} solid rgba(255,255,255,.9);box-shadow:0 2px ${highlight?10:5}px rgba(0,0,0,.4)">${RES_EMOJI[r.type]}</div>`,
     iconSize:[size,size],iconAnchor:[size/2,size/2],popupAnchor:[0,-size/2+4]});
 }
 
@@ -421,6 +513,24 @@ function toggleTheme(){
   const d=document.documentElement,l=d.getAttribute('data-theme')==='dark';
   d.setAttribute('data-theme',l?'light':'dark');
   document.getElementById('theme-btn').textContent=l?'🌙 Dark':'☀️ Light';
+}
+
+// ── CHAR COUNT ────────────────────────────────────────
+function updateCharCount(el,countId,max){
+  const n=el.value.length;
+  const el2=document.getElementById(countId);
+  el2.textContent=`${n} / ${max}`;
+  el2.style.color=n>max*.85?'var(--warning)':'var(--muted)';
+}
+
+// ── COPY TRACKING ID ──────────────────────────────────
+function copyTrackingId(){
+  const tid=document.getElementById('disp-tid').textContent;
+  navigator.clipboard.writeText(tid).then(()=>{
+    const btn=document.querySelector('.tid-copy');
+    btn.textContent='✅ Copied!';
+    setTimeout(()=>btn.textContent='📋 Copy ID',2000);
+  });
 }
 
 // ── TAB SWITCHER ──────────────────────────────────────
@@ -437,22 +547,32 @@ const reportMap=L.map('report-map').setView([23.2599,77.4126],12);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(reportMap);
 let reportPin=null;
 reportMap.on('click',e=>{
-  document.getElementById('r-lat').value=e.latlng.lat.toFixed(6);
-  document.getElementById('r-lng').value=e.latlng.lng.toFixed(6);
+  setCoords(e.latlng.lat.toFixed(6),e.latlng.lng.toFixed(6));
   if(reportPin)reportMap.removeLayer(reportPin);
   reportPin=L.marker([e.latlng.lat,e.latlng.lng]).addTo(reportMap).bindPopup('📍 Emergency location').openPopup();
 });
 
+function setCoords(lat,lng){
+  document.getElementById('r-lat').value=lat;
+  document.getElementById('r-lng').value=lng;
+  document.getElementById('coord-pinned').classList.add('show');
+}
+
 function useMyLocation(){
-  if(!navigator.geolocation)return alert('Geolocation not supported');
+  if(!navigator.geolocation){showFormAlert('Geolocation not supported by your browser.');return}
+  const btn=document.getElementById('gps-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>';
   navigator.geolocation.getCurrentPosition(pos=>{
     const la=pos.coords.latitude,ln=pos.coords.longitude;
-    document.getElementById('r-lat').value=la.toFixed(6);
-    document.getElementById('r-lng').value=ln.toFixed(6);
+    setCoords(la.toFixed(6),ln.toFixed(6));
     reportMap.flyTo([la,ln],15);
     if(reportPin)reportMap.removeLayer(reportPin);
     reportPin=L.marker([la,ln]).addTo(reportMap).bindPopup('📍 Your location').openPopup();
     userLat=la;userLng=ln;renderNearestResources();
+    btn.disabled=false;btn.innerHTML='📡 GPS';
+  },()=>{
+    showFormAlert('Could not get your location. Please pin manually on the map.');
+    btn.disabled=false;btn.innerHTML='📡 GPS';
   });
 }
 
@@ -481,12 +601,12 @@ function filterResources(type,el){
 }
 
 function myLocationOnResMap(){
-  if(!navigator.geolocation)return alert('Geolocation not supported');
+  if(!navigator.geolocation){alert('Geolocation not supported');return}
   navigator.geolocation.getCurrentPosition(pos=>{
     userLat=pos.coords.latitude;userLng=pos.coords.longitude;
     resMap.flyTo([userLat,userLng],14);
     if(userMarker)resMap.removeLayer(userMarker);
-    const myIcon=L.divIcon({className:'',html:`<div style="background:#9c27b0;width:16px;height:16px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 8px rgba(156,39,176,.6)"></div>`,iconSize:[16,16],iconAnchor:[8,8]});
+    const myIcon=L.divIcon({className:'',html:`<div style="background:#9c27b0;width:14px;height:14px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 8px rgba(156,39,176,.6)"></div>`,iconSize:[14,14],iconAnchor:[7,7]});
     userMarker=L.marker([userLat,userLng],{icon:myIcon}).addTo(resMap).bindPopup('📍 You are here').openPopup();
     addResourceMarkers();renderNearestResources();
   });
@@ -512,8 +632,25 @@ function renderNearestResources(){
 // ── WEBSOCKET ─────────────────────────────────────────
 let stomp=null,trackSub=null,vehicleSub=null;
 let trackedEmergencyId=null;
+let customerRouteLayer=null;
 
 const VEHICLE_EMOJI_MAP={AMBULANCE:'🚑',FIRE_TRUCK:'🚒',POLICE_CAR:'🚔'};
+const ROUTE_COLORS={AMBULANCE:'#4a9eff',FIRE_TRUCK:'#ff5722',POLICE_CAR:'#1565c0'};
+
+function drawCustomerRoute(vehicle){
+  if(customerRouteLayer){reportMap.removeLayer(customerRouteLayer);customerRouteLayer=null}
+  if(!vehicle.routeGeoJson)return;
+  try{
+    const geom=JSON.parse(vehicle.routeGeoJson);
+    const color=ROUTE_COLORS[vehicle.type]||'#4a9eff';
+    customerRouteLayer=L.geoJSON(geom,{style:{color,weight:4,opacity:.75,dashArray:'8 6',lineCap:'round'}}).addTo(reportMap);
+    reportMap.fitBounds(customerRouteLayer.getBounds().pad(.15));
+  }catch(e){console.warn('[Route] parse error',e)}
+}
+
+function clearCustomerRoute(){
+  if(customerRouteLayer){reportMap.removeLayer(customerRouteLayer);customerRouteLayer=null}
+}
 
 function connectWS(trackingId,statusElId,msgElId){
   if(stomp&&stomp.connected){subscribeTracking(trackingId,statusElId,msgElId);return}
@@ -537,49 +674,89 @@ function subscribeVehicles(){
   if(vehicleSub)vehicleSub.unsubscribe();
   vehicleSub=stomp.subscribe('/topic/vehicles',msg=>{
     const vehicles=JSON.parse(msg.body);
-    if(trackedEmergencyId) updateVehicleTracker(vehicles,trackedEmergencyId);
+    if(trackedEmergencyId)updateVehicleTracker(vehicles,trackedEmergencyId);
   });
 }
 
 function updateVehicleTracker(vehicles,emergencyId){
   const v=vehicles.find(v=>v.assignedEmergencyId==emergencyId);
   if(!v||v.vehicleStatus==='IDLE')return;
-
-  const tracker=document.getElementById('vehicle-tracker');
-  const emojiEl=document.getElementById('disp-vehicle-emoji');
-  const nameEl=document.getElementById('disp-vehicle-name');
-  const statusEl=document.getElementById('disp-vehicle-status');
-  const etaEl=document.getElementById('disp-vehicle-eta');
-
-  tracker.style.display='block';
-  emojiEl.textContent=VEHICLE_EMOJI_MAP[v.type]||'🚑';
-  nameEl.textContent=v.name;
-
+  document.getElementById('vehicle-tracker').style.display='block';
+  document.getElementById('disp-vehicle-emoji').textContent=VEHICLE_EMOJI_MAP[v.type]||'🚑';
+  document.getElementById('disp-vehicle-name').textContent=v.name;
   const sc=v.vehicleStatus.toLowerCase().replace('_','');
+  const statusEl=document.getElementById('disp-vehicle-status');
   statusEl.className=`vehicle-status-pill vp-${sc}`;
   statusEl.textContent=v.vehicleStatus.replace('_',' ');
-
-  const etaMessages={
-    DISPATCHED:'En route to your location…',
-    IN_PROGRESS:'Responder is nearby — almost there!',
-    RESOLVED:'Responder has arrived ✅'
-  };
-  etaEl.textContent=etaMessages[v.vehicleStatus]||'';
+  const etaMessages={DISPATCHED:'En route to your location…',IN_PROGRESS:'Responder is nearby — almost there!',RESOLVED:'Responder has arrived ✅'};
+  document.getElementById('disp-vehicle-eta').textContent=etaMessages[v.vehicleStatus]||'';
+  if(v.vehicleStatus==='DISPATCHED'||v.vehicleStatus==='IN_PROGRESS'){
+    if(v.routeGeoJson&&!customerRouteLayer)drawCustomerRoute(v);
+  }else{
+    clearCustomerRoute();
+  }
 }
 
 function updateStatusEl(statusElId,msgElId,status){
   const pill=document.getElementById(statusElId);
-  const msg=document.getElementById(msgElId);
+  const msgEl=document.getElementById(msgElId);
+  const map={
+    REPORTED:{cls:'active',text:'🔴 Reported'},
+    DISPATCHED:{cls:'dispatched',text:'🔵 Dispatched'},
+    IN_PROGRESS:{cls:'inprogress',text:'🟣 In Progress'},
+    RESOLVED:{cls:'resolved',text:'✅ Resolved'}
+  };
+  const s=map[status]||map.REPORTED;
+  pill.className='status-pill '+s.cls;
+  pill.textContent=s.text;
   if(status==='RESOLVED'){
-    pill.className='status-pill resolved';pill.textContent='✅ RESOLVED';
-    msg.textContent='Your emergency has been resolved!';msg.style.animation='none';msg.style.color='var(--success)';
-  } else {
-    pill.className='status-pill active';pill.textContent='🔴 REPORTED';
+    msgEl.innerHTML='<span class="ws-live-dot" style="background:var(--success)"></span> Your emergency has been resolved!';
+    msgEl.style.color='var(--success)';
   }
+}
+
+// ── FORM VALIDATION ───────────────────────────────────
+function validateField(id,errId,check){
+  const val=document.getElementById(id).value.trim();
+  const ok=check(val);
+  document.getElementById(id).classList.toggle('error',!ok);
+  document.getElementById(id).classList.toggle('ok',ok&&val.length>0);
+  if(errId)document.getElementById(errId).classList.toggle('show',!ok&&val.length===0);
+  return ok;
+}
+
+function clearFieldErrors(){
+  ['r-name','r-phone','r-type','r-loc'].forEach(id=>{
+    document.getElementById(id).classList.remove('error','ok');
+  });
+  ['err-name','err-phone','err-type','err-loc'].forEach(id=>{
+    document.getElementById(id).classList.remove('show');
+  });
+  hideFormAlert();
+}
+
+function showFormAlert(msg){
+  const el=document.getElementById('form-alert');
+  document.getElementById('form-alert-msg').textContent=msg;
+  el.className='form-alert form-alert-error show';
+}
+
+function hideFormAlert(){
+  document.getElementById('form-alert').classList.remove('show');
+}
+
+function setSubmitLoading(loading){
+  const btn=document.getElementById('submit-btn');
+  const icon=document.getElementById('submit-icon');
+  const text=document.getElementById('submit-text');
+  btn.disabled=loading;
+  if(loading){icon.outerHTML='<span id="submit-icon" class="spinner"></span>';text.textContent='Reporting…';}
+  else{document.getElementById('submit-icon').outerHTML='<span id="submit-icon">🚨</span>';text.textContent='Report Emergency';}
 }
 
 // ── SUBMIT REPORT ─────────────────────────────────────
 function submitReport(){
+  clearFieldErrors();
   const name=document.getElementById('r-name').value.trim();
   const phone=document.getElementById('r-phone').value.trim();
   const type=document.getElementById('r-type').value;
@@ -587,38 +764,51 @@ function submitReport(){
   const desc=document.getElementById('r-desc').value.trim();
   const lat=parseFloat(document.getElementById('r-lat').value);
   const lng=parseFloat(document.getElementById('r-lng').value);
-  if(!name||!phone||!type||!loc){alert('Please fill in all required fields.');return}
+
+  // Inline validation
+  let valid=true;
+  if(!name){document.getElementById('r-name').classList.add('error');document.getElementById('err-name').classList.add('show');valid=false}
+  if(!phone){document.getElementById('r-phone').classList.add('error');document.getElementById('err-phone').classList.add('show');valid=false}
+  if(!type){document.getElementById('r-type').classList.add('error');document.getElementById('err-type').classList.add('show');valid=false}
+  if(!loc){document.getElementById('r-loc').classList.add('error');document.getElementById('err-loc').classList.add('show');valid=false}
+  if(!valid){showFormAlert('Please fill in all required fields marked with ✱');return}
+
+  setSubmitLoading(true);
 
   fetch('/api/emergencies',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({reporterName:name,reporterPhone:phone,type,location:loc,
       description:desc,status:'REPORTED',
       latitude:isNaN(lat)?null:lat,longitude:isNaN(lng)?null:lng})
   })
-  .then(r=>r.json()).then(saved=>{
+  .then(r=>{
+    if(!r.ok)throw new Error('Server error '+r.status);
+    return r.json();
+  })
+  .then(saved=>{
+    setSubmitLoading(false);
     document.getElementById('report-form-card').style.display='none';
     document.getElementById('success-card').style.display='block';
     document.getElementById('disp-tid').textContent=saved.trackingId;
     updateStatusEl('disp-status','ws-live-msg',saved.status);
     trackedEmergencyId=saved.id;
 
-    // Show vehicle tracker immediately if dispatched
-    if(saved.status==='DISPATCHED'){
-      document.getElementById('vehicle-tracker').style.display='block';
-    }
+    if(saved.status==='DISPATCHED')document.getElementById('vehicle-tracker').style.display='block';
 
-    // ── AI PRIORITY BADGE ──────────────────────────────
     const p=saved.priority||'MEDIUM';
     const pClass=p==='HIGH'?'pb-high':p==='LOW'?'pb-low':'pb-medium';
     const pEmoji=p==='HIGH'?'🔴':p==='LOW'?'🟢':'🟡';
-    document.getElementById('disp-priority').innerHTML=
-      `<span class="priority-badge ${pClass}">${pEmoji} ${p}</span>`;
+    document.getElementById('disp-priority').innerHTML=`<span class="priority-badge ${pClass}">${pEmoji} ${p}</span>`;
     document.getElementById('priority-box').style.display='block';
-    // ──────────────────────────────────────────────────
 
     connectWS(saved.trackingId,'disp-status','ws-live-msg');
     window.scrollTo({top:0,behavior:'smooth'});
     if(!isNaN(lat)){userLat=lat;userLng=lng;renderNearestResources()}
-  }).catch(()=>alert('Failed to submit. Please try again.'));
+  })
+  .catch(err=>{
+    setSubmitLoading(false);
+    showFormAlert('Failed to submit your report. Please check your connection and try again.');
+    console.error(err);
+  });
 }
 
 // ── VERIFY & TRACK ────────────────────────────────────
@@ -628,14 +818,18 @@ async function verifyAndTrack(){
   const phone=document.getElementById('v-phone').value.trim();
   const alertEl=document.getElementById('verify-alert');
   const btn=document.getElementById('verify-btn');
+  alertEl.classList.remove('show');
 
   if(!tid||!name||!phone){
-    showVerifyAlert('Please fill in all fields.','error');return;
+    showVerifyAlert('Please fill in all three fields.','error');return;
   }
 
-  btn.disabled=true;btn.textContent='Verifying...';
+  // Loading state
+  btn.disabled=true;
+  document.getElementById('verify-icon').outerHTML='<span id="verify-icon" class="spinner"></span>';
+  document.getElementById('verify-text').textContent='Verifying…';
 
-  try {
+  try{
     const res=await fetch('/api/emergencies/verify',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -648,38 +842,45 @@ async function verifyAndTrack(){
       document.getElementById('verified-result').style.display='block';
 
       const pClass=data.priority==='HIGH'?'pb-high':data.priority==='MEDIUM'?'pb-medium':'pb-low';
-      document.getElementById('vr-type').textContent=data.type;
+      document.getElementById('vr-type').textContent=data.type||'—';
       document.getElementById('vr-priority').innerHTML=`<span class="priority-badge ${pClass}">${data.priority||'—'}</span>`;
       document.getElementById('vr-tid').textContent=data.trackingId;
       document.getElementById('vr-loc').textContent='📍 '+data.location;
       updateStatusEl('vr-live-status','vr-ws-msg',data.status);
 
       const sp=document.getElementById('vr-status');
-      sp.innerHTML=`<span class="status-pill ${data.status==='RESOLVED'?'resolved':'active'}">${data.status==='RESOLVED'?'✅ RESOLVED':'🔴 REPORTED'}</span>`;
+      const statusMap={REPORTED:'active',DISPATCHED:'dispatched',IN_PROGRESS:'inprogress',RESOLVED:'resolved'};
+      const statusText={REPORTED:'🔴 Reported',DISPATCHED:'🔵 Dispatched',IN_PROGRESS:'🟣 In Progress',RESOLVED:'✅ Resolved'};
+      sp.innerHTML=`<span class="status-pill ${statusMap[data.status]||'active'}">${statusText[data.status]||data.status}</span>`;
 
       connectWS(data.trackingId,'vr-live-status','vr-ws-msg');
-
-    } else {
-      showVerifyAlert(data.error||'Verification failed. Please check your details.','error');
+    }else if(res.status===404){
+      showVerifyAlert('Tracking ID not found. Please double-check the ID.','error');
+    }else if(res.status===403){
+      showVerifyAlert('Name or phone number doesn\'t match. Please check your details.','error');
+    }else{
+      showVerifyAlert(data.error||'Verification failed. Please try again.','error');
     }
-  } catch(e){
-    showVerifyAlert('Could not connect. Is the server running?','error');
+  }catch(e){
+    showVerifyAlert('Could not connect to the server. Please try again shortly.','error');
   }
 
-  btn.disabled=false;btn.textContent='🔍 Verify & Track';
+  btn.disabled=false;
+  document.getElementById('verify-icon').outerHTML='<span id="verify-icon">🔍</span>';
+  document.getElementById('verify-text').textContent='Verify & Track';
 }
 
 function showVerifyAlert(msg,type){
   const el=document.getElementById('verify-alert');
-  el.style.display='flex';
-  el.className='alert alert-'+type;
-  el.innerHTML=(type==='error'?'⚠️ ':'✅ ')+msg;
+  document.getElementById('verify-alert-msg').textContent=msg;
+  document.getElementById('verify-alert-icon').textContent=type==='error'?'⚠️':'✅';
+  el.className=`form-alert form-alert-${type} show`;
 }
 
 function resetTrack(){
   document.getElementById('verify-form-card').style.display='block';
   document.getElementById('verified-result').style.display='none';
-  document.getElementById('verify-alert').style.display='none';
+  document.getElementById('verify-alert').classList.remove('show');
   ['v-tid','v-name','v-phone'].forEach(id=>document.getElementById(id).value='');
 }
 
@@ -689,12 +890,16 @@ function reportAnother(){
   ['r-name','r-phone','r-loc','r-lat','r-lng'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('r-type').value='';
   document.getElementById('r-desc').value='';
-  // ── reset priority box ──
+  document.getElementById('desc-count').textContent='0 / 400';
+  document.getElementById('coord-pinned').classList.remove('show');
   document.getElementById('vehicle-tracker').style.display='none';
   trackedEmergencyId=null;
+  clearCustomerRoute();
   document.getElementById('priority-box').style.display='none';
   document.getElementById('disp-priority').innerHTML='';
+  clearFieldErrors();
   if(reportPin){reportMap.removeLayer(reportPin);reportPin=null}
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 </script>
 </body>
