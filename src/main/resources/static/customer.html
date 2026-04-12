@@ -138,18 +138,26 @@
     .priority-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:13px;margin-bottom:14px;text-align:center}
 
     /* ── VEHICLE TRACKER ── */
-    .vehicle-tracker{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:13px;margin-bottom:14px}
-    .vehicle-tracker-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
-    .vehicle-row{display:flex;align-items:center;gap:12px}
-    .vehicle-emoji{font-size:26px;flex-shrink:0}
-    .vehicle-detail{flex:1;min-width:0}
-    .vehicle-name-text{font-size:13px;font-weight:600;margin-bottom:4px}
-    .vehicle-status-pill{font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;text-transform:uppercase;display:inline-block}
+    .vehicle-tracker{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:14px}
+    .vehicle-tracker-hdr{padding:11px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid var(--border)}
+    .vehicle-tracker-left{display:flex;align-items:center;gap:9px}
+    .vehicle-detail{min-width:0}
+    .vehicle-emoji{font-size:20px;flex-shrink:0}
+    .vehicle-name-text{font-size:13px;font-weight:600;line-height:1.3}
+    .vehicle-status-pill{font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px;text-transform:uppercase;display:inline-block;margin-top:3px}
     .vp-idle{background:rgba(122,133,160,.15);color:var(--muted)}
     .vp-dispatched{background:rgba(74,158,255,.15);color:var(--info)}
     .vp-inprogress{background:rgba(156,39,176,.15);color:#b06fff;animation:pulse 1.5s infinite}
     .vp-resolved{background:rgba(26,170,114,.15);color:var(--success)}
-    .vehicle-eta{font-size:11px;color:var(--muted);margin-top:4px}
+    .vehicle-eta-badge{text-align:right;flex-shrink:0}
+    .eta-min{font-size:20px;font-weight:600;color:var(--text);line-height:1}
+    .eta-dist{font-size:11px;color:var(--muted);margin-top:2px}
+    /* Live map inside tracker */
+    .tracker-map-wrap{position:relative;height:220px;overflow:hidden;transition:height .4s ease}
+    .tracker-map-wrap.resolved{height:0}
+    .tracker-map{height:100%;width:100%}
+    /* Floating ETA label rendered above vehicle on map via Leaflet DivIcon */
+    .vehicle-map-label{background:var(--bg2);border:1.5px solid var(--border2);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,.35);font-family:'DM Sans',sans-serif;pointer-events:none}
 
     /* ── VERIFIED REPORT CARD ── */
     .verified-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-top:14px;animation:slideUp .3s ease both}
@@ -334,16 +342,23 @@
         <div style="font-size:11px;color:var(--muted);margin-top:5px">Automatically classified based on your report</div>
       </div>
 
-      <!-- Vehicle tracker -->
+      <!-- Vehicle tracker — live map -->
       <div class="vehicle-tracker" id="vehicle-tracker" style="display:none">
-        <div class="vehicle-tracker-label">🚨 Responder dispatched</div>
-        <div class="vehicle-row">
-          <div class="vehicle-emoji" id="disp-vehicle-emoji">🚑</div>
-          <div class="vehicle-detail">
-            <div class="vehicle-name-text" id="disp-vehicle-name">—</div>
-            <span class="vehicle-status-pill vp-dispatched" id="disp-vehicle-status">DISPATCHED</span>
-            <div class="vehicle-eta" id="disp-vehicle-eta">En route to your location</div>
+        <div class="vehicle-tracker-hdr">
+          <div class="vehicle-tracker-left">
+            <div class="vehicle-emoji" id="disp-vehicle-emoji">🚑</div>
+            <div class="vehicle-detail">
+              <div class="vehicle-name-text" id="disp-vehicle-name">Responder</div>
+              <span class="vehicle-status-pill vp-dispatched" id="disp-vehicle-status">DISPATCHED</span>
+            </div>
           </div>
+          <div class="vehicle-eta-badge">
+            <div class="eta-min" id="disp-eta-min">—</div>
+            <div class="eta-dist" id="disp-eta-dist">Calculating…</div>
+          </div>
+        </div>
+        <div class="tracker-map-wrap" id="disp-tracker-map-wrap">
+          <div id="disp-tracker-map" class="tracker-map"></div>
         </div>
       </div>
 
@@ -441,7 +456,28 @@
             <span class="ws-live-dot"></span> Listening for real-time updates…
           </div>
         </div>
-        <button class="another-btn" onclick="resetTrack()" style="margin-top:4px">← Track another</button>
+
+        <!-- Live responder map for track tab -->
+        <div class="vehicle-tracker" id="vr-vehicle-tracker" style="display:none;margin-top:13px">
+          <div class="vehicle-tracker-hdr">
+            <div class="vehicle-tracker-left">
+              <div class="vehicle-emoji" id="vr-vehicle-emoji">🚑</div>
+              <div class="vehicle-detail">
+                <div class="vehicle-name-text" id="vr-vehicle-name">Responder</div>
+                <span class="vehicle-status-pill vp-dispatched" id="vr-vehicle-status">DISPATCHED</span>
+              </div>
+            </div>
+            <div class="vehicle-eta-badge">
+              <div class="eta-min" id="vr-eta-min">—</div>
+              <div class="eta-dist" id="vr-eta-dist">Calculating…</div>
+            </div>
+          </div>
+          <div class="tracker-map-wrap" id="vr-tracker-map-wrap">
+            <div id="vr-tracker-map" class="tracker-map"></div>
+          </div>
+        </div>
+
+        <button class="another-btn" onclick="resetTrack()" style="margin-top:13px">← Track another</button>
       </div>
     </div>
   </div>
@@ -637,15 +673,132 @@ let customerRouteLayer=null;
 const VEHICLE_EMOJI_MAP={AMBULANCE:'🚑',FIRE_TRUCK:'🚒',POLICE_CAR:'🚔'};
 const ROUTE_COLORS={AMBULANCE:'#4a9eff',FIRE_TRUCK:'#ff5722',POLICE_CAR:'#1565c0'};
 
+// ── LIVE TRACKER MAPS (one per card) ─────────────────
+let trackerMaps={};       // 'disp' | 'vr' → L.Map
+let trackerVehicleMarkers={}; // 'disp' | 'vr' → L.Marker (vehicle)
+let trackerDestMarkers={};    // 'disp' | 'vr' → L.Marker (destination pin)
+let trackerRouteLines={};     // 'disp' | 'vr' → L.GeoJSON
+
+function getOrCreateTrackerMap(key){
+  if(trackerMaps[key]) return trackerMaps[key];
+  const mapEl=document.getElementById(key+'-tracker-map');
+  if(!mapEl) return null;
+  const map=L.map(mapEl,{zoomControl:false,attributionControl:false,dragging:true,scrollWheelZoom:false});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+  L.control.zoom({position:'bottomright'}).addTo(map);
+  trackerMaps[key]=map;
+  return map;
+}
+
+function makeTrackerVehicleIcon(emoji,color,etaText){
+  return L.divIcon({
+    className:'',
+    html:`<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div class="vehicle-map-label">${etaText}</div>
+      <div style="width:38px;height:38px;border-radius:50%;background:#1c2030;border:3px solid ${color};display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 3px 12px rgba(0,0,0,.5)">${emoji}</div>
+      <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid ${color};margin-top:-2px"></div>
+    </div>`,
+    iconSize:[80,80],iconAnchor:[40,72],popupAnchor:[0,-74]
+  });
+}
+
+function makeDestinationIcon(){
+  return L.divIcon({
+    className:'',
+    html:`<div style="display:flex;flex-direction:column;align-items:center">
+      <div style="background:var(--accent,#e53935);width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2.5px solid rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(229,57,53,.4)">
+        <div style="transform:rotate(45deg);width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:14px">📍</div>
+      </div>
+    </div>`,
+    iconSize:[32,38],iconAnchor:[16,38],popupAnchor:[0,-40]
+  });
+}
+
+function haversineKm(la1,ln1,la2,ln2){
+  const R=6371,dLa=(la2-la1)*Math.PI/180,dLn=(ln2-ln1)*Math.PI/180;
+  const a=Math.sin(dLa/2)**2+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dLn/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function calcEta(vLat,vLng,tLat,tLng){
+  const dist=haversineKm(vLat,vLng,tLat,tLng);
+  // ~60 km/h average speed
+  const mins=Math.max(1,Math.round((dist/60)*60));
+  return {dist,mins};
+}
+
+function updateTrackerMap(key,vehicle){
+  const map=getOrCreateTrackerMap(key);
+  if(!map) return;
+
+  const emoji=VEHICLE_EMOJI_MAP[vehicle.type]||'🚑';
+  const color=vehicle.vehicleStatus==='IN_PROGRESS'?'#b06fff':
+              vehicle.vehicleStatus==='DISPATCHED'?'#4a9eff':'#1aaa72';
+
+  const vLat=vehicle.currentLat, vLng=vehicle.currentLng;
+  const tLat=vehicle.targetLat,  tLng=vehicle.targetLng;
+
+  // Calculate ETA
+  let etaText='En route';
+  if(vLat&&tLat){
+    const {dist,mins}=calcEta(vLat,vLng,tLat,tLng);
+    etaText=`~${mins} min`;
+    // Update header badges
+    document.getElementById(key+'-eta-min').textContent=`~${mins} min`;
+    document.getElementById(key+'-eta-dist').textContent=`${dist.toFixed(1)} km away`;
+  }
+
+  // Vehicle marker — move or create
+  const vIcon=makeTrackerVehicleIcon(emoji,color,etaText);
+  if(trackerVehicleMarkers[key]){
+    trackerVehicleMarkers[key].setLatLng([vLat,vLng]).setIcon(vIcon);
+  } else {
+    trackerVehicleMarkers[key]=L.marker([vLat,vLng],{icon:vIcon,zIndexOffset:1000}).addTo(map);
+  }
+
+  // Destination pin — create once
+  if(!trackerDestMarkers[key]&&tLat&&tLng){
+    trackerDestMarkers[key]=L.marker([tLat,tLng],{icon:makeDestinationIcon(),zIndexOffset:500})
+      .bindPopup('<div style="font-family:\'DM Sans\',sans-serif;font-size:13px">📍 Emergency location</div>')
+      .addTo(map);
+  }
+
+  // Route line — draw once from routeGeoJson
+  if(!trackerRouteLines[key]&&vehicle.routeGeoJson){
+    try{
+      const geom=JSON.parse(vehicle.routeGeoJson);
+      const routeColor=ROUTE_COLORS[vehicle.type]||'#4a9eff';
+      trackerRouteLines[key]=L.geoJSON(geom,{
+        style:{color:routeColor,weight:4,opacity:.7,dashArray:'10 7',lineCap:'round'}
+      }).addTo(map);
+    }catch(e){console.warn('[TrackerMap] route parse error',e)}
+  }
+
+  // Pan map to keep vehicle in view, zoom to fit both points
+  if(tLat&&tLng&&vLat&&vLng){
+    const bounds=L.latLngBounds([[vLat,vLng],[tLat,tLng]]);
+    map.fitBounds(bounds.pad(.35),{animate:true,duration:.8,maxZoom:16});
+  } else {
+    map.setView([vLat,vLng],15,{animate:true,duration:.8});
+  }
+
+  // Show map wrap
+  setTimeout(()=>map.invalidateSize(),50);
+}
+
+function clearTrackerMap(key){
+  if(trackerMaps[key]){
+    if(trackerVehicleMarkers[key]){trackerMaps[key].removeLayer(trackerVehicleMarkers[key]);delete trackerVehicleMarkers[key]}
+    if(trackerDestMarkers[key]){trackerMaps[key].removeLayer(trackerDestMarkers[key]);delete trackerDestMarkers[key]}
+    if(trackerRouteLines[key]){trackerMaps[key].removeLayer(trackerRouteLines[key]);delete trackerRouteLines[key]}
+    trackerMaps[key].remove();
+    delete trackerMaps[key];
+  }
+}
+
 function drawCustomerRoute(vehicle){
+  // Legacy — no longer used for tracker maps, kept for compatibility
   if(customerRouteLayer){reportMap.removeLayer(customerRouteLayer);customerRouteLayer=null}
-  if(!vehicle.routeGeoJson)return;
-  try{
-    const geom=JSON.parse(vehicle.routeGeoJson);
-    const color=ROUTE_COLORS[vehicle.type]||'#4a9eff';
-    customerRouteLayer=L.geoJSON(geom,{style:{color,weight:4,opacity:.75,dashArray:'8 6',lineCap:'round'}}).addTo(reportMap);
-    reportMap.fitBounds(customerRouteLayer.getBounds().pad(.15));
-  }catch(e){console.warn('[Route] parse error',e)}
 }
 
 function clearCustomerRoute(){
@@ -674,26 +827,54 @@ function subscribeVehicles(){
   if(vehicleSub)vehicleSub.unsubscribe();
   vehicleSub=stomp.subscribe('/topic/vehicles',msg=>{
     const vehicles=JSON.parse(msg.body);
-    if(trackedEmergencyId)updateVehicleTracker(vehicles,trackedEmergencyId);
+    if(trackedEmergencyId){
+      updateVehicleTracker(vehicles,trackedEmergencyId,'disp');
+      updateVehicleTracker(vehicles,trackedEmergencyId,'vr');
+    }
   });
 }
 
-function updateVehicleTracker(vehicles,emergencyId){
+function updateVehicleTracker(vehicles,emergencyId,key){
   const v=vehicles.find(v=>v.assignedEmergencyId==emergencyId);
-  if(!v||v.vehicleStatus==='IDLE')return;
-  document.getElementById('vehicle-tracker').style.display='block';
-  document.getElementById('disp-vehicle-emoji').textContent=VEHICLE_EMOJI_MAP[v.type]||'🚑';
-  document.getElementById('disp-vehicle-name').textContent=v.name;
-  const sc=v.vehicleStatus.toLowerCase().replace('_','');
-  const statusEl=document.getElementById('disp-vehicle-status');
-  statusEl.className=`vehicle-status-pill vp-${sc}`;
-  statusEl.textContent=v.vehicleStatus.replace('_',' ');
-  const etaMessages={DISPATCHED:'En route to your location…',IN_PROGRESS:'Responder is nearby — almost there!',RESOLVED:'Responder has arrived ✅'};
-  document.getElementById('disp-vehicle-eta').textContent=etaMessages[v.vehicleStatus]||'';
-  if(v.vehicleStatus==='DISPATCHED'||v.vehicleStatus==='IN_PROGRESS'){
-    if(v.routeGeoJson&&!customerRouteLayer)drawCustomerRoute(v);
-  }else{
-    clearCustomerRoute();
+
+  // Which elements to update depends on key
+  const trackerEl=document.getElementById(key==='disp'?'vehicle-tracker':'vr-vehicle-tracker');
+  const emojiEl=document.getElementById(key+'-vehicle-emoji');
+  const nameEl=document.getElementById(key+'-vehicle-name');
+  const statusEl=document.getElementById(key+'-vehicle-status');
+  const mapWrap=document.getElementById(key+'-tracker-map-wrap');
+
+  if(!trackerEl) return;
+
+  if(!v||v.vehicleStatus==='IDLE'){
+    trackerEl.style.display='none';
+    clearTrackerMap(key);
+    return;
+  }
+
+  trackerEl.style.display='block';
+  if(emojiEl) emojiEl.textContent=VEHICLE_EMOJI_MAP[v.type]||'🚑';
+  if(nameEl)  nameEl.textContent=v.name;
+
+  if(statusEl){
+    const sc=v.vehicleStatus.toLowerCase().replace('_','');
+    statusEl.className=`vehicle-status-pill vp-${sc}`;
+    statusEl.textContent=v.vehicleStatus.replace('_',' ');
+  }
+
+  if(v.vehicleStatus==='RESOLVED'){
+    // Collapse map, show arrived message
+    if(mapWrap) mapWrap.classList.add('resolved');
+    if(document.getElementById(key+'-eta-min')) document.getElementById(key+'-eta-min').textContent='✅';
+    if(document.getElementById(key+'-eta-dist')) document.getElementById(key+'-eta-dist').textContent='Arrived';
+    clearTrackerMap(key);
+    return;
+  }
+
+  // Show the map
+  if(mapWrap) mapWrap.classList.remove('resolved');
+  if(v.currentLat&&v.currentLng){
+    updateTrackerMap(key,v);
   }
 }
 
@@ -838,6 +1019,7 @@ async function verifyAndTrack(){
     const data=await res.json();
 
     if(res.ok){
+      trackedEmergencyId=data.id;
       document.getElementById('verify-form-card').style.display='none';
       document.getElementById('verified-result').style.display='block';
 
@@ -882,6 +1064,8 @@ function resetTrack(){
   document.getElementById('verified-result').style.display='none';
   document.getElementById('verify-alert').classList.remove('show');
   ['v-tid','v-name','v-phone'].forEach(id=>document.getElementById(id).value='');
+  clearTrackerMap('vr');
+  document.getElementById('vr-vehicle-tracker').style.display='none';
 }
 
 function reportAnother(){
@@ -895,6 +1079,8 @@ function reportAnother(){
   document.getElementById('vehicle-tracker').style.display='none';
   trackedEmergencyId=null;
   clearCustomerRoute();
+  clearTrackerMap('disp');
+  clearTrackerMap('vr');
   document.getElementById('priority-box').style.display='none';
   document.getElementById('disp-priority').innerHTML='';
   clearFieldErrors();
