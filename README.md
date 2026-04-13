@@ -175,7 +175,7 @@ twilio.enabled=false
 | `http://localhost:8081/customer.html` | Citizen portal |
 
 **Default admin credentials:** `admin` / `admin123`
-> ⚠️ Change these before deploying to production
+
 
 ---
 
