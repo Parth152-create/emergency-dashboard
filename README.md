@@ -171,10 +171,19 @@ twilio.enabled=false
 ### 5. Open
 | URL | Description |
 |---|---|
-| `http://localhost:8081/login.html` | Admin login |
-| `http://localhost:8081/customer.html` | Citizen portal |
+| `https://emergency-dashboard-production.up.railway.app/` | Admin login |
+| `https://emergency-dashboard-production.up.railway.app/customer.html` | Citizen portal |
 
 **Default admin credentials:** `admin` / `admin123`
+
+## 🌐 Live Demo
+
+| Page | URL |
+|---|---|
+| Admin Login | https://emergency-dashboard-production.up.railway.app/login.html |
+| Customer Portal | https://emergency-dashboard-production.up.railway.app/customer.html |
+
+**Admin credentials:** `admin` / `admin123`
 
 
 ---
