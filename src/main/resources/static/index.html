@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Emergex — Admin</title>
-  <link rel="icon" href="data:,">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚨</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
@@ -200,8 +200,26 @@
     .res-filters{display:flex;gap:5px;padding:9px 14px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
 
     /* ── HIGH PRIORITY ALERT POPUP ── */
-    .alert-popup{position:fixed;top:16px;right:16px;z-index:99999;background:var(--bg2);border:1px solid var(--high);border-radius:14px;padding:16px 20px;width:300px;box-shadow:0 8px 32px rgba(229,57,53,.25);transform:translateX(340px);transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
-    .alert-popup.show{transform:translateX(0)}
+    /* ── TOAST SYSTEM ── */
+    .toast-container{position:fixed;top:16px;right:16px;z-index:99999;display:flex;flex-direction:column;gap:8px;pointer-events:none;max-width:300px;width:300px}
+    .toast{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;box-shadow:0 6px 24px rgba(0,0,0,.3);pointer-events:all;display:flex;align-items:flex-start;gap:10px;position:relative;overflow:hidden;transform:translateX(320px);opacity:0;transition:transform .3s cubic-bezier(.34,1.3,.64,1),opacity .25s ease}
+    .toast.show{transform:translateX(0);opacity:1}
+    .toast.hide{transform:translateX(320px);opacity:0;transition:transform .25s ease,opacity .2s ease}
+    .toast-icon{font-size:15px;flex-shrink:0;margin-top:1px}
+    .toast-body{flex:1;min-width:0}
+    .toast-title{font-size:12px;font-weight:600;margin-bottom:1px;line-height:1.3}
+    .toast-msg{font-size:11px;color:var(--muted);line-height:1.5}
+    .toast-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0;flex-shrink:0;line-height:1;opacity:.6;transition:.15s}
+    .toast-close:hover{opacity:1;color:var(--text)}
+    .toast-bar{position:absolute;bottom:0;left:0;height:2px;border-radius:0;animation:toastBar linear forwards}
+    @keyframes toastBar{from{width:100%}to{width:0%}}
+    .toast.t-error{border-color:rgba(229,57,53,.25)}.toast.t-error .toast-title{color:var(--high)}.toast.t-error .toast-bar{background:var(--high)}
+    .toast.t-success{border-color:rgba(26,170,114,.25)}.toast.t-success .toast-title{color:var(--success)}.toast.t-success .toast-bar{background:var(--success)}
+    .toast.t-info{border-color:rgba(74,158,255,.25)}.toast.t-info .toast-title{color:var(--info)}.toast.t-info .toast-bar{background:var(--info)}
+    .toast.t-warning{border-color:rgba(244,166,35,.25)}.toast.t-warning .toast-title{color:var(--warning)}.toast.t-warning .toast-bar{background:var(--warning)}
+    /* ── HIGH PRIORITY ALERT (separate from toast — stays until dismissed) ── */
+    .alert-popup{position:fixed;bottom:20px;right:16px;z-index:99998;background:var(--bg2);border:1px solid var(--high);border-radius:14px;padding:16px 20px;width:310px;box-shadow:0 8px 32px rgba(229,57,53,.3);transform:translateY(120px);opacity:0;transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .25s ease}
+    .alert-popup.show{transform:translateY(0);opacity:1}
     .alert-top{display:flex;align-items:center;gap:9px;margin-bottom:9px}
     .alert-pulse{width:10px;height:10px;border-radius:50%;background:var(--high);flex-shrink:0;animation:blink .8s infinite}
     .alert-title{font-size:13px;font-weight:600;color:var(--high)}
@@ -265,6 +283,8 @@
 <body>
 
 <!-- HIGH PRIORITY ALERT -->
+<div class="toast-container" id="toast-container"></div>
+
 <div class="alert-popup" id="alert-popup">
   <div class="alert-top"><span class="alert-pulse"></span><span class="alert-title">HIGH PRIORITY EMERGENCY</span></div>
   <div class="alert-body" id="alert-body">—</div>
@@ -698,12 +718,42 @@ stomp.connect({},()=>{
   document.getElementById('s-ws').textContent='Offline';
 });
 
-// ── ALERT ─────────────────────────────────────────────
+// ── TOAST SYSTEM ─────────────────────────────────────
+let toastCounter=0;
+function toast(title, msg='', type='info', duration=4000){
+  const id='toast-'+toastCounter++;
+  const icons={success:'✅',error:'⚠️',info:'ℹ️',warning:'🟡'};
+  const el=document.createElement('div');
+  el.className=`toast t-${type}`;
+  el.id=id;
+  el.innerHTML=`
+    <span class="toast-icon">${icons[type]||'ℹ️'}</span>
+    <div class="toast-body">
+      <div class="toast-title">${title}</div>
+      ${msg?`<div class="toast-msg">${msg}</div>`:''}
+    </div>
+    <button class="toast-close" onclick="dismissToast('${id}')">✕</button>
+    <div class="toast-bar" style="animation-duration:${duration}ms"></div>`;
+  document.getElementById('toast-container').appendChild(el);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('show')));
+  setTimeout(()=>dismissToast(id), duration);
+}
+
+function dismissToast(id){
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.classList.add('hide');
+  setTimeout(()=>el.remove(), 300);
+}
+
+// ── HIGH PRIORITY ALERT (persists until dismissed) ────
 let alertTimer=null;
 function showAlert(e){
   document.getElementById('alert-body').innerHTML=`<b>${TYPE_EMOJI[e.type]||'⚠️'} ${e.type}</b><br>📍 ${e.location}<br>👤 ${e.reporterName||'Unknown'} · 📞 ${e.reporterPhone||'—'}<br><span style="font-family:monospace;font-size:11px">${e.trackingId||''}</span>`;
   document.getElementById('alert-popup').classList.add('show');
-  clearTimeout(alertTimer);alertTimer=setTimeout(closeAlert,9000);
+  clearTimeout(alertTimer);alertTimer=setTimeout(closeAlert,12000);
+  // Also fire an info toast so it's visible even if alert is missed
+  toast('New HIGH priority emergency',`${TYPE_EMOJI[e.type]||'⚠️'} ${e.type} · ${e.location}`,'error',6000);
 }
 function closeAlert(){document.getElementById('alert-popup').classList.remove('show')}
 
@@ -838,6 +888,7 @@ function cardHTML(e,showLocate=false){
         ?`<button class="ebtn resolve" onclick="event.stopPropagation();resolveEmergency(${e.id},this)">✓ Resolve</button>`
         :`<button class="ebtn" style="opacity:.35;cursor:default">✓ Done</button>`}
       ${showLocate&&hasCoords?`<button class="ebtn locate" onclick="event.stopPropagation();flyToOnMap(${la},${ln})">📍 Map</button>`:''}
+      ${e.status==='REPORTED'&&hasCoords?`<button class="ebtn" style="border-color:rgba(74,158,255,.3);color:var(--info)" onclick="event.stopPropagation();manualDispatch(${e.id},this)" title="Manually dispatch a vehicle">🚑 Dispatch</button>`:''}
       <button class="ebtn reclassify" onclick="event.stopPropagation();reclassify(${e.id},this)" title="Re-run AI classification">🤖</button>
       <button class="ebtn del" onclick="event.stopPropagation();del(${e.id},this)">✕</button>
     </div>
@@ -902,44 +953,78 @@ function addEmergency(){
     longitude:parseFloat(document.getElementById('f-lng').value)||null
   })})
   .then(r=>{if(!r.ok)throw new Error('Server error');return r.json()})
-  .then(()=>{
+  .then(saved=>{
     setModalLoading(false);
     closeModal();
-    // Clear form
     ['f-type','f-location','f-desc','f-lat','f-lng'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('f-priority').value='HIGH';
+    toast('Emergency added',`${TYPE_EMOJI[saved.type]||'⚠️'} ${saved.type} · Priority: ${saved.priority}`,'success');
     loadData();
   })
   .catch(()=>{
     setModalLoading(false);
     errEl.textContent='Failed to add emergency. Please try again.';
     errEl.classList.add('show');
+    toast('Failed to add emergency','Check your connection and try again.','error');
   });
 }
 
-// ── ACTION BUTTONS WITH LOADING STATE ─────────────────
+// ── ACTION BUTTONS ────────────────────────────────────
 function resolveEmergency(id,btn){
   btn.disabled=true;btn.textContent='…';
   authFetch(`/api/emergencies/${id}`).then(r=>r.json()).then(e=>{
     e.status='RESOLVED';
     return authFetch(`/api/emergencies/${id}`,{method:'PUT',body:JSON.stringify(e)});
-  }).then(()=>loadData())
-  .catch(()=>{btn.disabled=false;btn.textContent='✓ Resolve'});
+  }).then(()=>{
+    toast('Emergency resolved','Marked as resolved successfully.','success');
+    loadData();
+  }).catch(()=>{
+    btn.disabled=false;btn.textContent='✓ Resolve';
+    toast('Failed to resolve','Please try again.','error');
+  });
 }
 
 function reclassify(id,btn){
   btn.disabled=true;btn.textContent='…';
   authFetch(`/api/emergencies/${id}/reclassify`,{method:'POST'})
-    .then(()=>loadData())
-    .catch(()=>{btn.disabled=false;btn.textContent='🤖'});
+    .then(r=>r.json())
+    .then(saved=>{
+      toast('AI reclassification complete',`New priority: ${saved.priority}`,'info');
+      loadData();
+    })
+    .catch(()=>{
+      btn.disabled=false;btn.textContent='🤖';
+      toast('Reclassification failed','Could not reach AI service.','error');
+    });
+}
+
+function manualDispatch(id,btn){
+  btn.disabled=true;btn.textContent='…';
+  authFetch(`/api/emergencies/${id}`).then(r=>r.json()).then(e=>{
+    // Reset status to REPORTED so the backend can dispatch again
+    e.status='REPORTED';
+    return authFetch(`/api/emergencies/${id}`,{method:'PUT',body:JSON.stringify(e)});
+  }).then(()=>{
+    toast('Vehicle dispatched','A responder has been assigned to this emergency.','success');
+    loadData();
+  }).catch(()=>{
+    btn.disabled=false;btn.textContent='🚑 Dispatch';
+    toast('Dispatch failed','Could not assign a vehicle. All vehicles may be busy.','error');
+  });
 }
 
 function del(id,btn){
   if(!confirm('Delete this emergency? This cannot be undone.'))return;
   btn.disabled=true;btn.textContent='…';
   authFetch(`/api/emergencies/${id}`,{method:'DELETE'})
-    .then(()=>loadData())
-    .catch(()=>{btn.disabled=false;btn.textContent='✕'});
+    .then(()=>{
+      toast('Emergency deleted','','info',2500);
+      loadData();
+    })
+    .catch(()=>{
+      btn.disabled=false;btn.textContent='✕';
+      toast('Delete failed','Please try again.','error');
+    });
 }
 
 loadData();
