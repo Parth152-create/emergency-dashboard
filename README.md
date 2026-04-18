@@ -171,8 +171,8 @@ twilio.enabled=false
 ### 5. Open
 | URL | Description |
 |---|---|
-| `https://emergency-dashboard-production.up.railway.app/` | Admin login |
-| `https://emergency-dashboard-production.up.railway.app/customer.html` | Citizen portal |
+| `https://emergex-zs21.onrender.com/customer.html` | Admin login |
+| `https://emergex-zs21.onrender.com/customer.html` | Citizen portal |
 
 **Default admin credentials:** `admin` / `admin123`
 
@@ -180,8 +180,8 @@ twilio.enabled=false
 
 | Page | URL |
 |---|---|
-| Admin Login | https://emergency-dashboard-production.up.railway.app/login.html |
-| Customer Portal | https://emergency-dashboard-production.up.railway.app/customer.html |
+| Admin Login | https://emergex-zs21.onrender.com/customer.html |
+| Customer Portal | https://emergex-zs21.onrender.com/customer.html |
 
 **Admin credentials:** `admin` / `admin123`
 
