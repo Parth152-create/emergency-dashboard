@@ -171,7 +171,7 @@ twilio.enabled=false
 ### 5. Open
 | URL | Description |
 |---|---|
-| `https://emergex-zs21.onrender.com/customer.html` | Admin login |
+| `https://emergex-zs21.onrender.com/` | Admin login |
 | `https://emergex-zs21.onrender.com/customer.html` | Citizen portal |
 
 **Default admin credentials:** `admin` / `admin123`
@@ -180,7 +180,7 @@ twilio.enabled=false
 
 | Page | URL |
 |---|---|
-| Admin Login | https://emergex-zs21.onrender.com/customer.html |
+| Admin Login |https://emergex-zs21.onrender.com/ |
 | Customer Portal | https://emergex-zs21.onrender.com/customer.html |
 
 **Admin credentials:** `admin` / `admin123`
